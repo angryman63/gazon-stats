@@ -11,7 +11,6 @@ st.set_page_config(
 st.title("⚽ Gazon Stats — Conseiller MPG")
 st.markdown("---")
 
-# Sidebar
 with st.sidebar:
     st.header("📁 Importer vos données")
     fichier = st.file_uploader(
@@ -109,16 +108,14 @@ for poste in df_scores['Poste'].unique():
     )
 
 # Filtre mes joueurs
+df_mes_joueurs = df_scores.copy()
 if filtrer and mes_joueurs_input.strip():
     mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
-    df_scores = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
-    if len(df_scores) == 0:
-        st.warning("⚠️ Aucun joueur trouvé — vérifiez l'orthographe des noms")
-        st.stop()
+    df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
 st.header("🏆 Recommandations par poste")
 
-colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
+colonnes_affichage = ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
 
 # Onglets
 if filtrer and mes_joueurs_input.strip():
@@ -132,11 +129,11 @@ if filtrer and mes_joueurs_input.strip():
         "🧤 Gardiens"
     ])
     with tab0:
-        top = df_scores.sort_values('_score', ascending=False)[colonnes_affichage]
+        top = df_mes_joueurs.sort_values('_score', ascending=False)[colonnes_affichage]
         if len(top) > 0:
             st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
         else:
-            st.info("Aucun joueur trouvé")
+            st.warning("⚠️ Aucun joueur trouvé — vérifiez l'orthographe des noms")
 else:
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "⚡ Attaquants",
@@ -156,14 +153,12 @@ postes_tabs = {
     tab6: 'G'
 }
 
+cols_sans_poste = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
+
 for tab, code in postes_tabs.items():
     with tab:
-        top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[colonnes_affichage]
+        top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[cols_sans_poste]
         if len(top) > 0:
             st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
-        else:
-            st.info("Aucun joueur disponible pour ce poste")
-                height=500
-            )
         else:
             st.info("Aucun joueur disponible pour ce poste")
