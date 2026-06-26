@@ -82,13 +82,13 @@ df_scores = pd.DataFrame(scores)
 
 def etiquette_regularite(valeur, q25, q50, q75):
     if valeur >= q75:
-        return "\u200b\u200b\u200b\u200b✅ Valeur sûre"
+        return "\u200b✅ Valeur sûre"
     elif valeur >= q50:
-        return "\u200b\u200b\u200b👌 Fiable"
+        return "\u200b\u200b👌 Fiable"
     elif valeur >= q25:
-        return "\u200b\u200b⚠️ Capricieux"
+        return "\u200b\u200b\u200b⚠️ Capricieux"
     else:
-        return "\u200b🐐 Rotaldo"
+        return "\u200b\u200b\u200b\u200b🐐 Rotaldo"
 
 for poste in df_scores['Poste'].unique():
     mask = df_scores['Poste'] == poste
