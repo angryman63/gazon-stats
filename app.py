@@ -17,6 +17,15 @@ fichier = st.sidebar.file_uploader(
     type=['xlsx']
 )
 
+st.sidebar.markdown("---")
+st.sidebar.header("📋 Mes joueurs")
+mes_joueurs_input = st.sidebar.text_area(
+    "Entrez vos joueurs (un par ligne)",
+    placeholder="Greenwood\nBarcola\nTolisso\nBalerdi",
+    height=150
+)
+filtrer = st.sidebar.checkbox("Afficher uniquement mes joueurs", value=False)
+
 if fichier is None:
     st.info("👈 Commencez par importer votre fichier MPGStats dans le panneau gauche")
     st.stop()
@@ -98,6 +107,14 @@ for poste in df_scores['Poste'].unique():
         lambda x: etiquette_regularite(x, q25, q50, q75)
     )
 
+# Filtre mes joueurs
+if filtrer and mes_joueurs_input.strip():
+    mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
+    df_scores = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
+    if len(df_scores) == 0:
+        st.warning("⚠️ Aucun joueur trouvé — vérifiez l'orthographe des noms")
+        st.stop()
+
 st.header("🏆 Recommandations par poste")
 
 postes = {
@@ -112,12 +129,12 @@ postes = {
 colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
 
 for code, nom in postes.items():
-    st.subheader(nom)
     top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[colonnes_affichage]
     if len(top) > 0:
+        st.subheader(nom)
         st.dataframe(
             top.reset_index(drop=True),
             use_container_width=True,
             height=400
         )
-    st.markdown("---")
+        st.markdown("---")
