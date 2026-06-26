@@ -29,7 +29,6 @@ def charger_donnees(fichier):
 df = charger_donnees(fichier)
 st.success(f"✅ {len(df)} joueurs chargés !")
 
-# Nettoyage des notes
 def nettoyer_note(valeur):
     if pd.isna(valeur):
         return 0
@@ -41,13 +40,7 @@ def nettoyer_note(valeur):
             return note
         return 0
     except:
-        try:
-            note = float(valeur.replace('.', '').replace(',', '.'))
-            if 0 <= note <= 10:
-                return note
-            return 0
-        except:
-            return 0
+        return 0
 
 cols_journees = [col for col in df.columns if str(col).startswith('D') and str(col)[1:].isdigit()]
 cols_journees = sorted(cols_journees, key=lambda x: int(x[1:]), reverse=True)
@@ -55,11 +48,7 @@ cols_journees = sorted(cols_journees, key=lambda x: int(x[1:]), reverse=True)
 for col in cols_journees:
     df[col] = df[col].apply(nettoyer_note)
 
-poids_6j = [0.30, 0.23, 0.18, 0.14, 0.10, 0.05]
-
-# Calcul des scores
 scores = []
-regularites_brutes = []
 
 for idx, row in df.iterrows():
     notes = [row[col] for col in cols_journees]
@@ -78,7 +67,6 @@ for idx, row in df.iterrows():
                  regularite_brute * 0.1 +
                  prob_jouer * 0.1)
         
-        regularites_brutes.append(regularite_brute)
         scores.append({
             'Joueur': row['Joueur'],
             'Poste': row['Poste'],
@@ -92,7 +80,6 @@ for idx, row in df.iterrows():
 
 df_scores = pd.DataFrame(scores)
 
-# Régularité en quartiles par poste
 def etiquette_regularite(valeur, q25, q50, q75):
     if valeur >= q75:
         return "✅ Valeur sûre"
@@ -111,7 +98,6 @@ for poste in df_scores['Poste'].unique():
         lambda x: etiquette_regularite(x, q25, q50, q75)
     )
 
-# Affichage
 st.header("🏆 Recommandations par poste")
 
 postes = {
@@ -127,7 +113,7 @@ colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité
 
 for code, nom in postes.items():
     st.subheader(nom)
-    top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[colonnes_affichee]
+    top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[colonnes_affichage]
     if len(top) > 0:
         st.dataframe(
             top.reset_index(drop=True),
