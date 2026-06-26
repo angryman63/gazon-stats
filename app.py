@@ -12,20 +12,20 @@ st.title("⚽ Gazon Stats — Conseiller MPG")
 st.markdown("---")
 
 # Sidebar
-st.sidebar.header("📁 Importer vos données")
-fichier = st.sidebar.file_uploader(
-    "Téléchargez le fichier MPGStats (xlsx)",
-    type=['xlsx']
-)
-
-st.sidebar.markdown("---")
-st.sidebar.header("📋 Mes joueurs")
-mes_joueurs_input = st.sidebar.text_area(
-    "Entrez vos joueurs (un par ligne)",
-    placeholder="Greenwood\nBarcola\nTolisso",
-    height=150
-)
-filtrer = st.sidebar.checkbox("Afficher uniquement mes joueurs", value=False)
+with st.sidebar:
+    st.header("📁 Importer vos données")
+    fichier = st.file_uploader(
+        "Téléchargez le fichier MPGStats (xlsx)",
+        type=['xlsx']
+    )
+    st.markdown("---")
+    st.header("📋 Mes joueurs")
+    mes_joueurs_input = st.text_area(
+        "Entrez vos joueurs (un par ligne)",
+        placeholder="Greenwood\nBarcola\nTolisso",
+        height=150
+    )
+    filtrer = st.checkbox("Afficher uniquement mes joueurs", value=False)
 
 if fichier is None:
     st.info("👈 Commencez par importer votre fichier MPGStats dans le panneau gauche")
@@ -118,24 +118,34 @@ if filtrer and mes_joueurs_input.strip():
 
 st.header("🏆 Recommandations par poste")
 
-postes = {
-    'A': '⚡ Attaquants',
-    'MO': '🎯 Milieux Offensifs',
-    'MD': '🛡️ Milieux Défensifs',
-    'DC': '🔒 Défenseurs Centraux',
-    'DL': '↔️ Défenseurs Latéraux',
-    'G': '🧤 Gardiens'
-}
-
 colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
 
-for code, nom in postes.items():
-    top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[colonnes_affichage]
-    if len(top) > 0:
-        st.subheader(nom)
-        st.dataframe(
-            top.reset_index(drop=True),
-            use_container_width=True,
-            height=400
-        )
-        st.markdown("---")
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "⚡ Attaquants",
+    "🎯 Milieux Off.",
+    "🛡️ Milieux Déf.",
+    "🔒 Défenseurs C.",
+    "↔️ Défenseurs L.",
+    "🧤 Gardiens"
+])
+
+postes_tabs = {
+    tab1: 'A',
+    tab2: 'MO',
+    tab3: 'MD',
+    tab4: 'DC',
+    tab5: 'DL',
+    tab6: 'G'
+}
+
+for tab, code in postes_tabs.items():
+    with tab:
+        top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[colonnes_affichage]
+        if len(top) > 0:
+            st.dataframe(
+                top.reset_index(drop=True),
+                use_container_width=True,
+                height=500
+            )
+        else:
+            st.info("Aucun joueur disponible pour ce poste")
