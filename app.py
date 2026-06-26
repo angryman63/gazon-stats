@@ -120,14 +120,32 @@ st.header("🏆 Recommandations par poste")
 
 colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "⚡ Attaquants",
-    "🎯 Milieux Off.",
-    "🛡️ Milieux Déf.",
-    "🔒 Défenseurs C.",
-    "↔️ Défenseurs L.",
-    "🧤 Gardiens"
-])
+# Onglets
+if filtrer and mes_joueurs_input.strip():
+    tab0, tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "⭐ Mes joueurs",
+        "⚡ Attaquants",
+        "🎯 Milieux Off.",
+        "🛡️ Milieux Déf.",
+        "🔒 Défenseurs C.",
+        "↔️ Défenseurs L.",
+        "🧤 Gardiens"
+    ])
+    with tab0:
+        top = df_scores.sort_values('_score', ascending=False)[colonnes_affichage]
+        if len(top) > 0:
+            st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
+        else:
+            st.info("Aucun joueur trouvé")
+else:
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "⚡ Attaquants",
+        "🎯 Milieux Off.",
+        "🛡️ Milieux Déf.",
+        "🔒 Défenseurs C.",
+        "↔️ Défenseurs L.",
+        "🧤 Gardiens"
+    ])
 
 postes_tabs = {
     tab1: 'A',
@@ -142,9 +160,9 @@ for tab, code in postes_tabs.items():
     with tab:
         top = df_scores[df_scores['Poste'] == code].sort_values('_score', ascending=False)[colonnes_affichage]
         if len(top) > 0:
-            st.dataframe(
-                top.reset_index(drop=True),
-                use_container_width=True,
+            st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
+        else:
+            st.info("Aucun joueur disponible pour ce poste")
                 height=500
             )
         else:
