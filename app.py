@@ -11,6 +11,7 @@ st.set_page_config(
 st.title("⚽ Gazon Stats — Conseiller MPG")
 st.markdown("---")
 
+# Sidebar
 st.sidebar.header("📁 Importer vos données")
 fichier = st.sidebar.file_uploader(
     "Téléchargez le fichier MPGStats (xlsx)",
@@ -21,7 +22,7 @@ st.sidebar.markdown("---")
 st.sidebar.header("📋 Mes joueurs")
 mes_joueurs_input = st.sidebar.text_area(
     "Entrez vos joueurs (un par ligne)",
-    placeholder="Greenwood\nBarcola\nTolisso\nBalerdi",
+    placeholder="Greenwood\nBarcola\nTolisso",
     height=150
 )
 filtrer = st.sidebar.checkbox("Afficher uniquement mes joueurs", value=False)
