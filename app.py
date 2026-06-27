@@ -11,6 +11,10 @@ st.set_page_config(
 st.title("⚽ Gazon Stats — Conseiller MPG")
 st.markdown("---")
 
+# ============================================================
+# SIDEBAR
+# ============================================================
+
 with st.sidebar:
     st.header("📁 Importer vos données")
     fichier = st.file_uploader(
@@ -38,6 +42,10 @@ def charger_donnees(fichier):
 df = charger_donnees(fichier)
 st.success(f"✅ {len(df)} joueurs chargés !")
 
+# ============================================================
+# FONCTIONS UTILITAIRES
+# ============================================================
+
 def nettoyer_note(valeur):
     if pd.isna(valeur):
         return 0
@@ -58,11 +66,59 @@ nb_journees = len(cols_journees)
 for col in cols_journees:
     df[col] = df[col].apply(nettoyer_note)
 
+def calculer_clutch(row, seuil=7):
+    notes = [row[col] for col in cols_journees if col in df.columns]
+    notes_jouees = [n for n in notes if n > 0]
+    if len(notes_jouees) == 0:
+        return 0
+    return len([n for n in notes_jouees if n >= seuil]) / len(notes_jouees)
+
+def compter_matchs(row):
+    return sum(1 for col in cols_journees if row[col] > 0)
+
+def absences_consecutives(row):
+    notes = [row[col] for col in cols_journees]
+    count = 0
+    for n in notes:
+        if n == 0:
+            count += 1
+        else:
+            break
+    return count
+
+def predire_note(row, j_actuelle=None):
+    notes = [row[col] for col in cols_journees if row[col] > 0]
+    if len(notes) < 3:
+        return None
+    poids = [0.30, 0.23, 0.18, 0.14, 0.10, 0.05]
+    notes_6 = notes[:6]
+    total_poids = sum(poids[:len(notes_6)])
+    return round(sum(n * poids[i] for i, n in enumerate(notes_6)) / total_poids, 2)
+
+def alerte_blessure(row):
+    indispo = row.get('Indispo ?', False)
+    absences = absences_consecutives(row)
+    if indispo == True:
+        if absences >= 8:
+            return f"🚑 Blessé ({absences} matchs)"
+        elif absences >= 1:
+            return f"🩹 Blessé ({absences} matchs)"
+    else:
+        if absences >= 8:
+            return f"🏥 Retour ({absences} matchs)"
+        elif absences >= 4:
+            return f"🐢 Retour ({absences} matchs)"
+    return ""
+
 # ============================================================
-# PAGE PRINCIPALE — 2 onglets
+# PAGES PRINCIPALES
 # ============================================================
 
-page1, page2 = st.tabs(["🏆 Conseiller hebdo", "🛒 Mercato"])
+page1, page2, page3 = st.tabs([
+    "🏆 Conseiller hebdo",
+    "🛒 Mercato",
+    "⚔️ Analyser mon adversaire"
+])
 
 # ============================================================
 # PAGE 1 — CONSEILLER HEBDO
@@ -71,8 +127,7 @@ page1, page2 = st.tabs(["🏆 Conseiller hebdo", "🛒 Mercato"])
 with page1:
     scores = []
     for idx, row in df.iterrows():
-        notes = [row[col] for col in cols_journees]
-        notes_jouees = [n for n in notes if n > 0]
+        notes_jouees = [row[col] for col in cols_journees if row[col] > 0]
         if len(notes_jouees) >= 6:
             six_derniers = notes_jouees[:6]
             moyenne = np.mean(six_derniers)
@@ -127,7 +182,9 @@ with page1:
             "🛡️ Milieux Déf.", "🔒 Défenseurs C.", "↔️ Défenseurs L.", "🧤 Gardiens"
         ])
         with tab0:
-            top = df_mes_joueurs.sort_values('_score', ascending=False)[['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']]
+            top = df_mes_joueurs.sort_values('_score', ascending=False)[
+                ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
+            ]
             st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
     else:
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -157,71 +214,29 @@ with page2:
     df_mercato = df_mercato.dropna(subset=['Cote', 'Note', 'Variation', '%Titu'])
     df_mercato = df_mercato[df_mercato['Cote'] > 0]
 
-    # Matchs joués et absences
-    def compter_matchs(row):
-        notes = [row[col] for col in cols_journees if col in df.columns]
-        return len([n for n in notes if n > 0])
-
-    def absences_consecutives(row):
-        notes = [row[col] for col in cols_journees if col in df.columns]
-        count = 0
-        for n in notes:
-            if n == 0:
-                count += 1
-            else:
-                break
-        return count
-
     df_mercato['Matchs_joues'] = df.apply(compter_matchs, axis=1)
     df_mercato['Absences_recentes'] = df.apply(absences_consecutives, axis=1)
-
-    def alerte_blessure(row):
-        indispo = row['Indispo ?']
-        absences = row['Absences_recentes']
-        if indispo == True:
-            if absences >= 8:
-                return f"🚑 Blessé ({absences} matchs)"
-            elif absences >= 1:
-                return f"🩹 Blessé ({absences} matchs)"
-        else:
-            if absences >= 8:
-                return f"🏥 Retour ({absences} matchs)"
-            elif absences >= 4:
-                return f"🐢 Retour ({absences} matchs)"
-        return ""
-
-    df_mercato['Alerte'] = df_mercato.apply(alerte_blessure, axis=1)
+    df_mercato['Alerte'] = df.apply(alerte_blessure, axis=1)
+    df_mercato['Clutch'] = df.apply(lambda row: calculer_clutch(row, seuil=7), axis=1)
+    df_mercato['Popularite'] = df_mercato['Cote'] * df_mercato['Note'] / 100
+    df_mercato['Ratio'] = df_mercato['Note'] / df_mercato['Cote']
 
     seuil_matchs = int(nb_journees * 0.40)
+
     df_eviter = df_mercato[
         ((df_mercato['Cote'] >= 20) & (df_mercato['Note'] < 5.2)) |
         ((df_mercato['Cote'] >= 15) & (df_mercato['Note'] < 5.0)) |
         ((df_mercato['Cote'] >= 15) & (df_mercato['Matchs_joues'] < seuil_matchs))
     ].copy()
 
-    def compter_clutch(row):
-        notes = [row[col] for col in cols_journees if col in df.columns]
-        notes_jouees = [n for n in notes if n > 0]
-        if len(notes_jouees) == 0:
-            return 0
-        return len([n for n in notes_jouees if n >= 7]) / len(notes_jouees)
-
-    df_mercato['Clutch'] = df.apply(compter_clutch, axis=1)
-    df_mercato['Popularite'] = df_mercato['Cote'] * df_mercato['Note'] / 100
-
-    for col in ['Variation', 'Clutch', 'Popularite']:
+    for col in ['Variation', 'Clutch', 'Popularite', 'Ratio']:
         col_min = df_mercato[col].min()
         col_max = df_mercato[col].max()
-        df_mercato[f'{col}_norm'] = (df_mercato[col] - col_min) / (col_max - col_min)
-
-    df_mercato['Ratio'] = df_mercato['Note'] / df_mercato['Cote']
-    ratio_min = df_mercato['Ratio'].min()
-    ratio_max = df_mercato['Ratio'].max()
-    df_mercato['Ratio_norm'] = (df_mercato['Ratio'] - ratio_min) / (ratio_max - ratio_min)
+        df_mercato[f'{col}_norm'] = (df_mercato[col] - col_min) / (col_max - col_min) if col_max > col_min else 0
 
     clutch_poids = {'G': 0.35, 'A': 0.30, 'MO': 0.20, 'DL': 0.15, 'MD': 0.10, 'DC': 0.10}
 
-    def calculer_score(row, strategie):
+    def calculer_score_mercato(row, strategie):
         cp = clutch_poids.get(row['Poste'], 0.15)
         clutch = row['Clutch_norm'] * 10
         note = row['Note']
@@ -240,7 +255,7 @@ with page2:
 
     for strategie in ['stars', 'valeurs_sures', 'equilibre', 'pepites']:
         df_mercato[f'Score_{strategie}'] = df_mercato.apply(
-            lambda row: calculer_score(row, strategie), axis=1
+            lambda row: calculer_score_mercato(row, strategie), axis=1
         )
 
     df_stars = df_mercato[(df_mercato['Cote'] >= 25) & (df_mercato['Note'] >= 5.5) & (df_mercato['%Titu'] >= 60)].copy()
@@ -248,14 +263,13 @@ with page2:
     df_equilibre = df_mercato[(df_mercato['Cote'] >= 8) & (df_mercato['Note'] >= 5.0) & (df_mercato['%Titu'] >= 60)].copy()
     df_pepites = df_mercato[(df_mercato['Cote'] < 12) & (df_mercato['Note'] >= 5.0) & (df_mercato['%Titu'] >= 50)].copy()
 
-    # Sélection stratégie
     strategie_choisie = st.radio(
         "Choisissez votre stratégie mercato :",
         ["⭐⭐ Stars", "⭐ Valeurs sûres", "⚖️ Équilibre", "🌱 Pépites", "⚠️ À éviter"],
         horizontal=True
     )
 
-    cols_affichage = ['Joueur', 'Cote', 'Note', 'Clutch', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
+    cols_affichage_mercato = ['Joueur', 'Cote', 'Note', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
 
     strategie_map = {
         "⭐⭐ Stars": ('stars', df_stars),
@@ -272,14 +286,15 @@ with page2:
         )
         st.dataframe(
             df_eviter[['Joueur', 'Poste', 'Cote', 'Note', 'Matchs_joues', '%Titu', 'Alerte', 'Raison']].reset_index(drop=True),
-            use_container_width=True,
-            height=400
+            use_container_width=True, height=400
         )
     else:
         strategie_key, df_s = strategie_map[strategie_choisie]
-        postes = {'A': '⚡ Attaquants', 'MO': '🎯 Milieux Off.', 'MD': '🛡️ Milieux Déf.',
-                  'DC': '🔒 Défenseurs C.', 'DL': '↔️ Défenseurs L.', 'G': '🧤 Gardiens'}
-
+        postes = {
+            'A': '⚡ Attaquants', 'MO': '🎯 Milieux Off.',
+            'MD': '🛡️ Milieux Déf.', 'DC': '🔒 Défenseurs C.',
+            'DL': '↔️ Défenseurs L.', 'G': '🧤 Gardiens'
+        }
         tabs = st.tabs(list(postes.values()))
         for tab, (code, nom) in zip(tabs, postes.items()):
             with tab:
@@ -292,10 +307,312 @@ with page2:
                     ]
                 else:
                     df_poste = df_s[df_s['Poste'] == code]
-
                 top = df_poste.sort_values(f'Score_{strategie_key}', ascending=False).head(10).copy()
                 top['Clutch'] = top['Clutch'].apply(lambda x: f"{x*100:.0f}%")
                 if len(top) > 0:
-                    st.dataframe(top[cols_affichage].reset_index(drop=True), use_container_width=True, height=400)
+                    st.dataframe(top[cols_affichage_mercato + ['Clutch']].reset_index(drop=True),
+                                use_container_width=True, height=400)
                 else:
                     st.info("Aucun joueur disponible")
+
+# ============================================================
+# PAGE 3 — ANALYSER MON ADVERSAIRE
+# ============================================================
+
+with page3:
+    st.header("⚔️ Analyser mon adversaire")
+
+    # Stratégie de jeu
+    st.subheader("🎯 Votre stratégie")
+    strategie_jeu = st.radio(
+        "Choisissez votre stratégie :",
+        ["🗡️ Offensive", "⚖️ Équilibrée", "🛡️ Défensive"],
+        horizontal=True
+    )
+
+    mode_analyse = st.radio(
+        "Mode d'analyse :",
+        ["🔮 Analyse préventive (avant match)", "🎯 Analyse précise (compo connue)"],
+        horizontal=True
+    )
+
+    st.markdown("---")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("🔵 Mon équipe")
+        mes_titu = st.text_area(
+            "Mes titulaires (un par ligne)",
+            placeholder="Koffi\nBalerdi\nOkoh\nCoppola\nMoreira\nTolisso\nThomasson\nKebbal\nGreenwood\nBarcola\nThauvin",
+            height=250,
+            key="mes_titu"
+        )
+        mes_remplacants = st.text_area(
+            "Mes remplaçants (un par ligne)",
+            placeholder="Safonov\nGradit\nRongier\nFofana",
+            height=150,
+            key="mes_rempl"
+        )
+
+    with col2:
+        st.subheader("🔴 Équipe adverse")
+        if "précise" in mode_analyse:
+            adv_titu = st.text_area(
+                "Titulaires adverses (un par ligne)",
+                placeholder="Descamps\nChardonnet\nDiomandé\nGaniou\nUdol\nThomasson\nGboho\nAndré\nDoumbia\nSinayoko\nPagis",
+                height=250,
+                key="adv_titu"
+            )
+            adv_remplacants = st.text_area(
+                "Remplaçants adverses (un par ligne)",
+                placeholder="Safonov\nGradit\nSangaré\nLepaul",
+                height=150,
+                key="adv_rempl"
+            )
+        else:
+            adv_joueurs = st.text_area(
+                "Joueurs adverses disponibles (un par ligne)",
+                placeholder="Descamps\nChardonnet\nDiomandé\nGaniou\nUdol\nThomasson\nGboho\nAndré\nDoumbia\nSinayoko\nPagis\nSafonov\nGradit",
+                height=400,
+                key="adv_joueurs"
+            )
+
+    st.markdown("---")
+
+    if st.button("🚀 Lancer la simulation", type="primary"):
+
+        # Récupérer les notes prédites
+        def get_joueur_info(nom_joueur):
+            row = df[df['Joueur'].str.lower() == nom_joueur.strip().lower()]
+            if len(row) == 0:
+                return None
+            row = row.iloc[0]
+            note_pred = predire_note(row)
+            buts_moy = pd.to_numeric(row.get('Buts', 0), errors='coerce')
+            matchs = compter_matchs(row)
+            buts_par_match = (buts_moy / matchs) if matchs > 0 and not pd.isna(buts_moy) else 0
+            clutch_7 = calculer_clutch(row, seuil=7)
+            clutch_8 = calculer_clutch(row, seuil=8)
+            poste = row.get('Poste', 'MO')
+            return {
+                'nom': row['Joueur'],
+                'poste': poste,
+                'note_pred': note_pred,
+                'buts': buts_par_match,
+                'clutch_7': clutch_7,
+                'clutch_8': clutch_8,
+                'regularite': 1 / (1 + np.std([row[col] for col in cols_journees if row[col] > 0] or [0])),
+                'alerte': alerte_blessure(row)
+            }
+
+        # Mapper postes vers lignes MPG
+        def poste_vers_ligne(poste):
+            mapping = {'G': 'GB', 'DC': 'DEF', 'DL': 'DEF', 'MD': 'MIL', 'MO': 'MIL', 'A': 'ATT'}
+            return mapping.get(poste, 'MIL')
+
+        def bonus_poste(poste, dispositif):
+            if poste in ['DC', 'DL'] and dispositif.get('nb_def', 0) >= 4:
+                return 0.5
+            return 0
+
+        # Construire équipe depuis liste de noms
+        def construire_equipe_noms(noms_titu, noms_rempl, strategie):
+            titu_info = []
+            rempl_info = []
+
+            for nom in [n.strip() for n in noms_titu.split('\n') if n.strip()]:
+                info = get_joueur_info(nom)
+                if info:
+                    titu_info.append(info)
+
+            for nom in [n.strip() for n in noms_rempl.split('\n') if n.strip()]:
+                info = get_joueur_info(nom)
+                if info:
+                    rempl_info.append(info)
+
+            return titu_info, rempl_info
+
+        # Construire meilleure compo depuis liste de joueurs disponibles
+        def meilleure_compo(noms_joueurs, strategie):
+            joueurs_info = []
+            for nom in [n.strip() for n in noms_joueurs.split('\n') if n.strip()]:
+                info = get_joueur_info(nom)
+                if info and info['note_pred'] is not None:
+                    joueurs_info.append(info)
+
+            # Trier selon stratégie
+            if strategie == "🗡️ Offensive":
+                joueurs_info.sort(key=lambda x: x['clutch_7'], reverse=True)
+            elif strategie == "🛡️ Défensive":
+                joueurs_info.sort(key=lambda x: x['regularite'], reverse=True)
+            else:
+                joueurs_info.sort(key=lambda x: x['note_pred'] or 0, reverse=True)
+
+            # Répartir par poste
+            equipe = {'GB': [], 'DEF': [], 'MIL': [], 'ATT': []}
+            limites = {'GB': 1, 'DEF': 4, 'MIL': 4, 'ATT': 2}
+            remplacants = {'GB': [], 'DEF': [], 'MIL': [], 'ATT': []}
+
+            for j in joueurs_info:
+                ligne = poste_vers_ligne(j['poste'])
+                if len(equipe[ligne]) < limites[ligne]:
+                    equipe[ligne].append(j)
+                elif len(remplacants[ligne]) < 2:
+                    remplacants[ligne].append(j)
+
+            return equipe, remplacants
+
+        # Simulation buts MPG
+        def simuler_buts_mpg_info(equipe_att, equipe_def, domicile=True):
+            buts_mpg = []
+
+            moy_att = np.mean([j['note_pred'] for j in equipe_def.get('ATT', []) if j['note_pred']] or [5])
+            moy_mil = np.mean([j['note_pred'] for j in equipe_def.get('MIL', []) if j['note_pred']] or [5])
+            moy_def = np.mean([j['note_pred'] for j in equipe_def.get('DEF', []) if j['note_pred']] or [5])
+            note_gb = equipe_def['GB'][0]['note_pred'] if equipe_def.get('GB') and equipe_def['GB'][0]['note_pred'] else 5
+
+            for ligne, joueurs in equipe_att.items():
+                if ligne == 'GB':
+                    continue
+                for j in joueurs:
+                    note = j['note_pred']
+                    if note is None or note < 5.5 or j['buts'] > 0:
+                        continue
+                    note_courante = note
+                    if ligne == 'ATT':
+                        lignes = [(moy_def, -1.0), (note_gb, -0.5)]
+                    elif ligne == 'MIL':
+                        lignes = [(moy_mil, -1.0), (moy_def, -0.5), (note_gb, -0.5)]
+                    elif ligne == 'DEF':
+                        lignes = [(moy_att, -1.0), (moy_mil, -0.5), (moy_def, -0.5), (note_gb, -0.5)]
+
+                    but = True
+                    for moy, malus in lignes:
+                        passe = note_courante >= moy if domicile else note_courante > moy
+                        if not passe:
+                            but = False
+                            break
+                        note_courante += malus
+                    if but:
+                        buts_mpg.append(j['nom'])
+
+            return buts_mpg
+
+        # ============================================================
+        # LANCEMENT SIMULATION
+        # ============================================================
+
+        st.markdown("---")
+        st.subheader("📊 Résultats de la simulation")
+
+        # Mon équipe
+        titu_moi, rempl_moi = construire_equipe_noms(mes_titu, mes_remplacants, strategie_jeu)
+
+        equipe_moi = {'GB': [], 'DEF': [], 'MIL': [], 'ATT': []}
+        for j in titu_moi:
+            ligne = poste_vers_ligne(j['poste'])
+            equipe_moi[ligne].append(j)
+
+        # Équipe adverse
+        if "précise" in mode_analyse:
+            titu_adv, rempl_adv = construire_equipe_noms(adv_titu, adv_remplacants, strategie_jeu)
+            equipe_adv = {'GB': [], 'DEF': [], 'MIL': [], 'ATT': []}
+            for j in titu_adv:
+                ligne = poste_vers_ligne(j['poste'])
+                equipe_adv[ligne].append(j)
+        else:
+            equipe_adv, _ = meilleure_compo(adv_joueurs, strategie_jeu)
+
+        # Simulation
+        buts_mpg_moi = simuler_buts_mpg_info(equipe_moi, equipe_adv, domicile=True)
+        buts_mpg_adv = simuler_buts_mpg_info(equipe_adv, equipe_moi, domicile=False)
+
+        buts_reels_moi = sum(j['buts'] for ligne in equipe_moi.values() for j in ligne)
+        buts_reels_adv = sum(j['buts'] for ligne in equipe_adv.values() for j in ligne)
+
+        # Arrêt MPG gardien
+        arret_moi = equipe_moi['GB'][0]['note_pred'] >= 8 if equipe_moi.get('GB') and equipe_moi['GB'][0]['note_pred'] else False
+        arret_adv = equipe_adv['GB'][0]['note_pred'] >= 8 if equipe_adv.get('GB') and equipe_adv['GB'][0]['note_pred'] else False
+
+        if arret_moi:
+            buts_reels_adv = max(0, buts_reels_adv - 1)
+        if arret_adv:
+            buts_reels_moi = max(0, buts_reels_moi - 1)
+
+        score_moi = buts_reels_moi + len(buts_mpg_moi)
+        score_adv = buts_reels_adv + len(buts_mpg_adv)
+
+        # Affichage scores
+        col_score1, col_score2, col_score3 = st.columns([2, 1, 2])
+        with col_score1:
+            st.metric("🔵 Mon équipe", f"{round(score_moi, 1)} buts")
+            if buts_mpg_moi:
+                st.success(f"⚽ Buts MPG : {', '.join(buts_mpg_moi)}")
+            if arret_moi:
+                st.info(f"🧤 Arrêt MPG de {equipe_moi['GB'][0]['nom']} !")
+        with col_score2:
+            if score_moi > score_adv:
+                st.markdown("### 🏆 Victoire probable")
+            elif score_moi < score_adv:
+                st.markdown("### 😢 Défaite probable")
+            else:
+                st.markdown("### 🤝 Match nul probable")
+        with col_score3:
+            st.metric("🔴 Adversaire", f"{round(score_adv, 1)} buts")
+            if buts_mpg_adv:
+                st.error(f"⚽ Buts MPG adverses : {', '.join(buts_mpg_adv)}")
+            if arret_adv:
+                st.warning(f"🧤 Arrêt MPG adverse possible !")
+
+        st.markdown("---")
+
+        # Recommandation capitaine
+        st.subheader("🎖️ Recommandation capitaine")
+
+        candidats_cap = []
+        for ligne, joueurs in equipe_moi.items():
+            if ligne == 'GB':
+                continue
+            for j in joueurs:
+                if j['note_pred'] is not None:
+                    if strategie_jeu == "🗡️ Offensive":
+                        score_cap = j['clutch_7'] * 0.6 + (j['note_pred'] / 10) * 0.4
+                    elif strategie_jeu == "🛡️ Défensive":
+                        score_cap = j['regularite'] * 0.6 + (j['note_pred'] / 10) * 0.4
+                    else:
+                        score_cap = (j['note_pred'] / 10) * 0.5 + j['regularite'] * 0.3 + j['clutch_7'] * 0.2
+                    candidats_cap.append((j['nom'], j['poste'], j['note_pred'], score_cap))
+
+        # Vérifier gardien clutch
+        if equipe_moi.get('GB') and equipe_moi['GB'][0]['clutch_8'] >= 0.10:
+            gb = equipe_moi['GB'][0]
+            if strategie_jeu == "🛡️ Défensive":
+                candidats_cap.append((gb['nom'], 'G', gb['note_pred'], 999))
+
+        if candidats_cap:
+            meilleur = max(candidats_cap, key=lambda x: x[3])
+            st.success(f"🎖️ Capitaine recommandé : **{meilleur[0]}** ({meilleur[1]}) — Note prédite : {meilleur[2]}")
+
+        # Détails équipes
+        st.markdown("---")
+        col_eq1, col_eq2 = st.columns(2)
+
+        with col_eq1:
+            st.subheader("🔵 Mon équipe — Détails")
+            for ligne in ['GB', 'DEF', 'MIL', 'ATT']:
+                for j in equipe_moi.get(ligne, []):
+                    note = f"{j['note_pred']:.2f}" if j['note_pred'] else "?"
+                    alerte = f" {j['alerte']}" if j['alerte'] else ""
+                    clutch = f" | Clutch: {j['clutch_7']*100:.0f}%"
+                    st.write(f"**{ligne}** | {j['nom']} — Note prédite: {note}{clutch}{alerte}")
+
+        with col_eq2:
+            st.subheader("🔴 Équipe adverse — Détails")
+            for ligne in ['GB', 'DEF', 'MIL', 'ATT']:
+                for j in equipe_adv.get(ligne, []):
+                    note = f"{j['note_pred']:.2f}" if j['note_pred'] else "?"
+                    alerte = f" {j['alerte']}" if j['alerte'] else ""
+                    # Détection Rotaldo probable
+                    rotaldo = " ⚠️ Rotaldo probable !" if j['note_pred'] is None or j['note_pred'] < 3 else ""
+                    st.write(f"**{ligne}** | {j['nom']} — Note prédite: {note}{alerte}{rotaldo}")
