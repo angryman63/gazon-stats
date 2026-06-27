@@ -44,8 +44,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
     st.header("🏆 Recommandations par poste")
-    colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme récente', 'Fiabilité', '% Titulaire']
-
+    
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
 | Emoji | Statut |
