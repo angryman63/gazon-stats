@@ -22,7 +22,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
                 'Poste': row['Poste'],
                 'Club': row['Club'],
                 'Note saison': round(moyenne_saison, 2),
-                'Forme 6J': round(float(moyenne), 2),
+                'Forme récente': round(float(moyenne), 2),
                 '_regularite_brute': regularite_brute,
                 '% Titulaire': f"{int(prob_jouer*100)}%",
                 '_score': round(float(score), 2)
@@ -33,9 +33,9 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
     for poste in df_scores['Poste'].unique():
         mask = df_scores['Poste'] == poste
         vals = df_scores.loc[mask, '_regularite_brute']
-        q25, q50, q75 = vals.quantile([0.25, 0.5, 0.75])
-        df_scores.loc[mask, 'Régularité'] = df_scores.loc[mask, '_regularite_brute'].apply(
-            lambda x: etiquette_regularite(x, q25, q50, q75)
+        q10, q50, q80 = vals.quantile([0.10, 0.50, 0.80])
+        df_scores.loc[mask, 'Fiabilité'] = df_scores.loc[mask, '_regularite_brute'].apply(
+            lambda x: etiquette_regularite(x, q10, q50, q80)
         )
 
     df_mes_joueurs = df_scores.copy()
@@ -44,7 +44,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
     st.header("🏆 Recommandations par poste")
-    colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
+    colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme récente', 'Fiabilité', '% Titulaire']
 
     if filtrer and mes_joueurs_input.strip():
         tab0, tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -53,7 +53,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         ])
         with tab0:
             top = df_mes_joueurs.sort_values('_score', ascending=False)[
-                ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
+                ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme récente', 'Fiabilité', '% Titulaire']
             ]
             if len(top) > 0:
                 st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
