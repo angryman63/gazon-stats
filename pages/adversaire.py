@@ -155,25 +155,39 @@ def afficher_adversaire(df, cols_journees):
 
     st.markdown("---")
 
+    # Choix domicile/extérieur
+    domicile = st.radio(
+        "Vous jouez :",
+        ["🏠 À domicile", "✈️ À l'extérieur"],
+        horizontal=True,
+        key="domicile"
+    ) == "🏠 À domicile"
+
+    st.markdown("---")
+
     if st.button("🚀 Lancer la simulation", type="primary"):
 
         def construire_equipe_noms(noms_titu):
             titu_info = []
+            non_trouves = []
             for nom in [n.strip() for n in noms_titu.split('\n') if n.strip()]:
                 info = get_joueur_info(nom, df, cols_journees)
                 if info:
                     titu_info.append(info)
-            return titu_info
+                else:
+                    non_trouves.append(nom)
+            return titu_info, non_trouves
 
         # Mon équipe
-        titu_moi = construire_equipe_noms(mes_titu)
+        titu_moi, non_trouves_moi = construire_equipe_noms(mes_titu)
         equipe_moi = {'GB': [], 'DEF': [], 'MIL': [], 'ATT': []}
         for j in titu_moi:
             equipe_moi[poste_vers_ligne(j['poste'])].append(j)
 
         # Équipe adverse
+        non_trouves_adv = []
         if "précise" in mode_analyse:
-            titu_adv = construire_equipe_noms(adv_titu)
+            titu_adv, non_trouves_adv = construire_equipe_noms(adv_titu)
             equipe_adv = {'GB': [], 'DEF': [], 'MIL': [], 'ATT': []}
             for j in titu_adv:
                 equipe_adv[poste_vers_ligne(j['poste'])].append(j)
@@ -182,12 +196,17 @@ def afficher_adversaire(df, cols_journees):
                 adv_joueurs, df, cols_journees, strategie_jeu
             )
 
+        # Alertes joueurs non trouvés
+        if non_trouves_moi:
+            st.warning(f"⚠️ Joueurs non trouvés dans le fichier (mon équipe) : {', '.join(non_trouves_moi)}")
+        if non_trouves_adv:
+            st.warning(f"⚠️ Joueurs non trouvés dans le fichier (adversaire) : {', '.join(non_trouves_adv)}")
+
         # Convertir en format Monte Carlo
         def equipe_vers_mc(equipe):
             joueurs_mc = []
             for ligne, joueurs in equipe.items():
                 for j in joueurs:
-                    # Chercher les stats réelles dans le df
                     row = df[df['Joueur'].str.lower() == j['nom'].lower()]
                     if len(row) > 0:
                         row = row.iloc[0]
@@ -204,7 +223,6 @@ def afficher_adversaire(df, cols_journees):
                                 'buts': float(buts_par_match)
                             })
                             continue
-                    # Fallback si joueur non trouvé
                     joueurs_mc.append({
                         'nom': j['nom'],
                         'ligne': ligne,
@@ -217,12 +235,6 @@ def afficher_adversaire(df, cols_journees):
         joueurs_moi_mc = equipe_vers_mc(equipe_moi)
         joueurs_adv_mc = equipe_vers_mc(equipe_adv)
 
-        # Debug
-        st.write(f"🔍 {len(joueurs_moi_mc)} joueurs MC moi | {len(joueurs_adv_mc)} joueurs MC adv")
-        if joueurs_moi_mc:
-            j0 = joueurs_moi_mc[0]
-            st.write(f"Ex: {j0['nom']} | moy={j0['moyenne']:.2f} | std={j0['ecart_type']:.2f} | buts={j0['buts']:.2f}")
-
         # Bonus adverse
         bonus_adv_key = bonus_key_map.get(bonus_adv_restant, None)
 
@@ -230,7 +242,8 @@ def afficher_adversaire(df, cols_journees):
         with st.spinner("🔄 Simulation en cours (500 scénarios)..."):
             res_sb = monte_carlo_match(
                 joueurs_moi_mc, joueurs_adv_mc,
-                n_simulations=500
+                n_simulations=500,
+                domicile=domicile
             )
 
         # Résultat sans bonus
@@ -294,9 +307,11 @@ def afficher_adversaire(df, cols_journees):
                     bonus_key = bonus_key_map.get(bonus, None)
                     res_b = monte_carlo_match(
                         joueurs_moi_mc, joueurs_adv_mc,
-                        n_simulations=500,
+                        n_simulations=200,
                         bonus_moi=bonus_key,
-                        bonus_adv=bonus_adv_key
+                        bonus_adv=bonus_adv_key,
+                        domicile=domicile,
+                        joueur_uber=joueur_uber
                     )
                     resultats_bonus[bonus] = res_b
 
