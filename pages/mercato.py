@@ -104,6 +104,16 @@ def afficher_mercato(df, cols_journees):
         horizontal=True
     )
 
+    with st.expander("🏥 Légende blessures"):
+        st.markdown("""
+| Emoji | Statut |
+|---|---|
+| 🚑 | Blessé — 8+ matchs manqués |
+| 🩹 | Blessé — moins de 8 matchs manqués |
+| 🏥 | Retour de blessure — 8+ matchs d'absence |
+| 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
+""")
+
     cols_affichage = ['Joueur', 'Cote', 'Note', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
 
     strategie_map = {
