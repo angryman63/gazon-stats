@@ -63,7 +63,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         ])
         with tab0:
             top = df_mes_joueurs.sort_values('_score', ascending=False)[
-                ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme récente', 'Fiabilité', '% Titulaire']
+                ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
             ]
             if len(top) > 0:
                 st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
