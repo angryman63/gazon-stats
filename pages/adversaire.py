@@ -143,19 +143,18 @@ def afficher_adversaire(df, cols_journees):
     with col_b2:
         st.markdown("**Bonus adverses**")
         bonus_adv_utilises = st.multiselect(
-            "Bonus déjà utilisés par l'adversaire :",
+            "Bonus encore disponibles chez l'adversaire :",
             liste_bonus,
             key="bonus_adv_utilises"
         )
         bonus_adv_restant = st.selectbox(
-            "Bonus adverse probable ce match :",
+            "Bonus adverse que vous craignez ce match :",
             ["Aucun"] + liste_bonus,
             key="bonus_adv_restant"
         )
 
     st.markdown("---")
 
-    # Choix domicile/extérieur
     domicile = st.radio(
         "Vous jouez :",
         ["🏠 À domicile", "✈️ À l'extérieur"],
@@ -198,9 +197,9 @@ def afficher_adversaire(df, cols_journees):
 
         # Alertes joueurs non trouvés
         if non_trouves_moi:
-            st.warning(f"⚠️ Joueurs non trouvés dans le fichier (mon équipe) : {', '.join(non_trouves_moi)}")
+            st.warning(f"⚠️ Joueurs non trouvés (mon équipe) : {', '.join(non_trouves_moi)}")
         if non_trouves_adv:
-            st.warning(f"⚠️ Joueurs non trouvés dans le fichier (adversaire) : {', '.join(non_trouves_adv)}")
+            st.warning(f"⚠️ Joueurs non trouvés (adversaire) : {', '.join(non_trouves_adv)}")
 
         # Convertir en format Monte Carlo
         def equipe_vers_mc(equipe):
@@ -235,7 +234,6 @@ def afficher_adversaire(df, cols_journees):
         joueurs_moi_mc = equipe_vers_mc(equipe_moi)
         joueurs_adv_mc = equipe_vers_mc(equipe_adv)
 
-        # Bonus adverse
         bonus_adv_key = bonus_key_map.get(bonus_adv_restant, None)
 
         # Simulation sans bonus
@@ -246,7 +244,6 @@ def afficher_adversaire(df, cols_journees):
                 domicile=domicile
             )
 
-        # Résultat sans bonus
         st.subheader("📊 Résultat simulé — 500 scénarios")
 
         col_s1, col_s2, col_s3 = st.columns([2, 1, 2])
