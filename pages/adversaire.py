@@ -1,11 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import copy
-from modele import (nettoyer_note, calculer_clutch, compter_matchs,
-                    absences_consecutives, predire_note, alerte_blessure,
-                    get_joueur_info, poste_vers_ligne,
-                    simuler_buts_mpg, appliquer_bonus)
+from modele import (get_joueur_info, poste_vers_ligne,
+                    monte_carlo_match, get_stats_joueur_mc)
 
 liste_bonus = [
     "💼 Valise à Nanard — annule 1 but adverse",
@@ -17,6 +14,18 @@ liste_bonus = [
     "💻 Cheat Code — -0.5 à tous joueurs adverses",
     "🍔 Uber Eats — +1 à un joueur choisi",
 ]
+
+bonus_key_map = {
+    "💼 Valise à Nanard — annule 1 but adverse": "valise",
+    "🪞 Miroir — retourne le bonus adverse": "miroir",
+    "💃 Zahia — +1 à tous mes joueurs": "zahia",
+    "🦷 Suarez — -1 au gardien adverse": "suarez",
+    "👊 Tonton Pat' — annule remplacements adverses": "tonton",
+    "🟥 Chapron Rouge — retire 1 joueur adverse au hasard": "chapron",
+    "💻 Cheat Code — -0.5 à tous joueurs adverses": "cheat_code",
+    "🍔 Uber Eats — +1 à un joueur choisi": "uber_eats",
+    "Aucun": None,
+}
 
 def meilleure_compo(noms_joueurs, df, cols_journees, strategie):
     joueurs_info = []
@@ -173,73 +182,69 @@ def afficher_adversaire(df, cols_journees):
                 adv_joueurs, df, cols_journees, strategie_jeu
             )
 
-        # Simulation sans bonus
-        buts_mpg_moi = simuler_buts_mpg(equipe_moi, equipe_adv, domicile=True)
-        buts_mpg_adv = simuler_buts_mpg(equipe_adv, equipe_moi, domicile=False)
-        buts_reels_moi = sum(j['buts'] for ligne in equipe_moi.values() for j in ligne)
-        buts_reels_adv = sum(j['buts'] for ligne in equipe_adv.values() for j in ligne)
+        # Convertir en format Monte Carlo
+        def equipe_vers_mc(equipe):
+            joueurs_mc = []
+            for ligne, joueurs in equipe.items():
+                for j in joueurs:
+                    stats = get_stats_joueur_mc(j, cols_journees, df)
+                    if stats:
+                        joueurs_mc.append(stats)
+                    else:
+                        joueurs_mc.append({
+                            'nom': j['nom'],
+                            'ligne': ligne,
+                            'moyenne': j['note_pred'] or 5.0,
+                            'ecart_type': 1.0,
+                            'buts': j['buts']
+                        })
+            return joueurs_mc
 
-        arret_moi = (equipe_moi.get('GB') and equipe_moi['GB'] and
-                     equipe_moi['GB'][0]['note_pred'] and
-                     equipe_moi['GB'][0]['note_pred'] >= 8)
-        arret_adv = (equipe_adv.get('GB') and equipe_adv['GB'] and
-                     equipe_adv['GB'][0]['note_pred'] and
-                     equipe_adv['GB'][0]['note_pred'] >= 8)
+        joueurs_moi_mc = equipe_vers_mc(equipe_moi)
+        joueurs_adv_mc = equipe_vers_mc(equipe_adv)
 
-        if arret_moi:
-            buts_reels_adv = max(0, buts_reels_adv - 1)
-        if arret_adv:
-            buts_reels_moi = max(0, buts_reels_moi - 1)
+        # Bonus adverse
+        bonus_adv_key = bonus_key_map.get(bonus_adv_restant, None)
 
-        score_moi = round(buts_reels_moi + len(buts_mpg_moi), 1)
-        score_adv = round(buts_reels_adv + len(buts_mpg_adv), 1)
-        diff_sb = round(score_moi - score_adv, 1)
+        # ============================================================
+        # SIMULATION SANS BONUS
+        # ============================================================
 
-        # Test automatique de tous les bonus
-        resultats_bonus = {}
-        for bonus in mes_bonus_dispo:
-            j_uber = joueur_uber if "Uber Eats" in bonus else None
-            eq_m_b, eq_a_b, ann_a, ann_m = appliquer_bonus(
-                equipe_moi, equipe_adv, bonus, bonus_adv_restant, j_uber
+        with st.spinner("🔄 Simulation en cours (500 scénarios)..."):
+            res_sb = monte_carlo_match(
+                joueurs_moi_mc, joueurs_adv_mc,
+                n_simulations=500
             )
-            mpg_m = simuler_buts_mpg(eq_m_b, eq_a_b, domicile=True)
-            mpg_a = simuler_buts_mpg(eq_a_b, eq_m_b, domicile=False)
-            s_m = round(max(0, buts_reels_moi + len(mpg_m) - ann_m), 1)
-            s_a = round(max(0, buts_reels_adv + len(mpg_a) - ann_a), 1)
-            resultats_bonus[bonus] = {
-                'score_moi': s_m,
-                'score_adv': s_a,
-                'diff': round(s_m - s_a, 1),
-                'gain': round((s_m - s_a) - diff_sb, 1)
-            }
 
-        # Résultat sans bonus
-        st.subheader("📊 Résultat simulé — Sans bonus")
+        # ============================================================
+        # RÉSULTAT SANS BONUS
+        # ============================================================
+
+        st.subheader("📊 Résultat simulé — 500 scénarios")
+
         col_s1, col_s2, col_s3 = st.columns([2, 1, 2])
 
         with col_s1:
-            st.metric("🔵 Mon équipe", f"{score_moi} buts")
-            if buts_mpg_moi:
-                st.success(f"⚽ Buts MPG : {', '.join(buts_mpg_moi)}")
-            if arret_moi:
-                st.info(f"🧤 Arrêt MPG de {equipe_moi['GB'][0]['nom']} !")
+            st.metric("🏆 Victoire", f"{res_sb['victoires']}%")
+            st.metric("🤝 Nul", f"{res_sb['nuls']}%")
+            st.metric("😢 Défaite", f"{res_sb['defaites']}%")
 
         with col_s2:
-            if diff_sb > 0:
-                st.markdown("### 🏆 Victoire")
-            elif diff_sb < 0:
-                st.markdown("### 😢 Défaite")
+            if res_sb['victoires'] > 50:
+                st.markdown("### 🏆 Favori")
+            elif res_sb['victoires'] > 40:
+                st.markdown("### ⚖️ Serré")
             else:
-                st.markdown("### 🤝 Nul")
+                st.markdown("### 😢 Outsider")
 
         with col_s3:
-            st.metric("🔴 Adversaire", f"{score_adv} buts")
-            if buts_mpg_adv:
-                st.error(f"⚽ Buts MPG adverses : {', '.join(buts_mpg_adv)}")
-            if arret_adv:
-                st.warning("🧤 Arrêt MPG adverse possible !")
+            st.metric("Score moyen prévu",
+                     f"{res_sb['score_moy_moi']} - {res_sb['score_moy_adv']}")
 
-        # Recommandation capitaine
+        # ============================================================
+        # RECOMMANDATION CAPITAINE
+        # ============================================================
+
         st.markdown("---")
         st.subheader("🎖️ Recommandation capitaine")
         candidats_cap = []
@@ -265,88 +270,101 @@ def afficher_adversaire(df, cols_journees):
             meilleur_cap = max(candidats_cap, key=lambda x: x[3])
             st.success(f"🎖️ **{meilleur_cap[0]}** ({meilleur_cap[1]}) — Note prédite : {meilleur_cap[2]}")
 
-        # Recommandation bonus
+        # ============================================================
+        # TEST AUTOMATIQUE DE TOUS LES BONUS
+        # ============================================================
+
         st.markdown("---")
         st.subheader("🎯 Recommandation Gazon Stats")
 
-        if resultats_bonus:
+        if mes_bonus_dispo:
             st.markdown("**Impact de chaque bonus disponible :**")
+
+            resultats_bonus = {}
+            with st.spinner("🔄 Test des bonus en cours..."):
+                for bonus in mes_bonus_dispo:
+                    bonus_key = bonus_key_map.get(bonus, None)
+                    j_uber = joueur_uber if bonus_key == 'uber_eats' else None
+                    res_b = monte_carlo_match(
+                        joueurs_moi_mc, joueurs_adv_mc,
+                        n_simulations=500,
+                        bonus_moi=bonus_key,
+                        bonus_adv=bonus_adv_key
+                    )
+                    resultats_bonus[bonus] = res_b
+
             for bonus, res in sorted(
                 resultats_bonus.items(),
-                key=lambda x: x[1]['diff'],
+                key=lambda x: x[1]['victoires'],
                 reverse=True
             ):
                 nom_bonus = bonus.split('—')[0].strip()
-                s_m = res['score_moi']
-                s_a = res['score_adv']
-                gain = res['gain']
-                diff = res['diff']
-                if diff > 0:
+                gain = round(res['victoires'] - res_sb['victoires'], 1)
+                gain_str = f"+{gain}%" if gain > 0 else f"{gain}%"
+                if res['victoires'] > 50:
                     emoji = "✅"
-                    label = "Victoire"
-                elif diff == 0:
-                    emoji = "🤝"
-                    label = "Nul"
+                elif res['victoires'] > 40:
+                    emoji = "⚖️"
                 else:
                     emoji = "❌"
-                    label = "Défaite"
-                gain_str = f"+{gain}" if gain > 0 else str(gain)
-                st.write(f"{emoji} **{nom_bonus}** → {s_m}-{s_a} {label} ({gain_str} but)")
+                st.write(
+                    f"{emoji} **{nom_bonus}** → "
+                    f"🏆 {res['victoires']}% victoire ({gain_str}) | "
+                    f"Score: {res['score_moy_moi']}-{res['score_moy_adv']}"
+                )
 
-            meilleur_bonus = max(resultats_bonus.items(), key=lambda x: x[1]['diff'])
-            nom_meilleur = meilleur_bonus[0].split('—')[0].strip()
-            res_meilleur = meilleur_bonus[1]
-            diff_meilleur = res_meilleur['diff']
+            # Meilleur bonus
+            meilleur = max(resultats_bonus.items(), key=lambda x: x[1]['victoires'])
+            nom_meilleur = meilleur[0].split('—')[0].strip()
+            res_meilleur = meilleur[1]
+            gain_meilleur = round(res_meilleur['victoires'] - res_sb['victoires'], 1)
 
             st.markdown("---")
 
-            if diff_sb >= 2:
-                st.success(f"✅ **Gardez vos bonus** — Victoire confortable {score_moi}-{score_adv}. Aucun bonus nécessaire !")
-            elif diff_sb >= 0.5:
+            vic = res_sb['victoires']
+
+            if vic >= 65:
+                st.success(f"✅ **Gardez vos bonus** — Vous êtes largement favori ({vic}%). Économisez pour un match plus serré !")
+            elif vic >= 50:
                 if importance_match == "🔥 Crucial":
-                    st.success(f"✅ **Utilisez {nom_meilleur}** — Match crucial, sécurisez la victoire {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !")
+                    st.success(f"✅ **Utilisez {nom_meilleur}** — Match crucial, passe à {res_meilleur['victoires']}% de victoire !")
                 else:
-                    st.success(f"✅ **Gardez vos bonus** — Victoire probable {score_moi}-{score_adv}. Économisez pour un match plus serré !")
-            elif diff_sb >= 0:
-                if diff_meilleur > diff_sb:
-                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Match très serré ({score_moi}-{score_adv}), le bonus améliore à {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !")
+                    st.success(f"✅ **Gardez vos bonus** — Favori à {vic}%, bonus non indispensable !")
+            elif vic >= 40:
+                if gain_meilleur >= 10:
+                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Match serré ({vic}%), le bonus fait passer à {res_meilleur['victoires']}% !")
                 else:
-                    st.warning(f"⚠️ **Match très serré {score_moi}-{score_adv}** — Aucun bonus ne change significativement le résultat")
-            elif diff_sb >= -1:
-                if diff_meilleur >= 0:
-                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Peut renverser {score_moi}-{score_adv} en {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !")
-                elif diff_meilleur > diff_sb:
-                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Réduit la défaite de {score_moi}-{score_adv} à {res_meilleur['score_moi']}-{res_meilleur['score_adv']}")
+                    st.warning(f"⚠️ **Match très serré ({vic}%)** — Aucun bonus ne change significativement le résultat")
+            elif vic >= 30:
+                if res_meilleur['victoires'] >= 50:
+                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Peut renverser la situation ({vic}% → {res_meilleur['victoires']}%) !")
                 else:
-                    st.error(f"❌ **Défaite probable {score_moi}-{score_adv}** — Aucun bonus ne change le résultat. Économisez-les !")
-            elif diff_sb >= -2:
-                if diff_meilleur >= 0:
-                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Peut renverser cette défaite {score_moi}-{score_adv} !")
-                else:
-                    st.error(f"❌ **Défaite difficile {score_moi}-{score_adv}** — Économisez vos bonus pour un match plus abordable !")
+                    st.error(f"❌ **Défaite probable ({vic}%)** — Aucun bonus ne suffit. Économisez-les !")
             else:
-                st.error(f"❌ **Défaite sévère {score_moi}-{score_adv}** — N'utilisez aucun bonus, rien n'y fera. Gardez-les pour la semaine prochaine !")
+                st.error(f"❌ **Défaite très probable ({vic}%)** — N'utilisez aucun bonus, gardez-les pour un match gagnable !")
 
         else:
-            if diff_sb >= 2:
-                st.success(f"✅ Victoire confortable {score_moi}-{score_adv} — Pas besoin de bonus !")
-            elif diff_sb >= 0.5:
-                st.success(f"✅ Victoire probable {score_moi}-{score_adv} !")
-            elif diff_sb >= 0:
-                st.warning(f"⚠️ Match très serré {score_moi}-{score_adv} — Envisagez d'utiliser un bonus !")
-            elif diff_sb >= -1:
-                st.error(f"❌ Défaite probable {score_moi}-{score_adv} — Utilisez un bonus si disponible !")
-            elif diff_sb >= -2:
-                st.error(f"❌ Défaite difficile {score_moi}-{score_adv} — Bonus utile uniquement si très crucial !")
+            vic = res_sb['victoires']
+            if vic >= 65:
+                st.success(f"✅ Largement favori ({vic}%) — Pas besoin de bonus !")
+            elif vic >= 50:
+                st.success(f"✅ Favori ({vic}%) — Victoire probable !")
+            elif vic >= 40:
+                st.warning(f"⚠️ Match serré ({vic}%) — Envisagez d'utiliser un bonus !")
+            elif vic >= 30:
+                st.error(f"❌ Outsider ({vic}%) — Utilisez un bonus si disponible !")
             else:
-                st.error(f"❌ Défaite sévère {score_moi}-{score_adv} — Économisez vos bonus !")
+                st.error(f"❌ Très outsider ({vic}%) — Économisez vos bonus !")
 
         if bonus_adv_restant != "Aucun":
             st.info(f"⚠️ L'adversaire a encore {bonus_adv_restant.split('—')[0].strip()} — Vérifiez sur MPGStats !")
         if "Miroir" in bonus_adv_restant:
             st.warning("🪞 **L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
 
-        # Détails équipes
+        # ============================================================
+        # DÉTAILS ÉQUIPES
+        # ============================================================
+
         st.markdown("---")
         col_eq1, col_eq2 = st.columns(2)
 
