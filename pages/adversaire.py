@@ -187,44 +187,53 @@ def afficher_adversaire(df, cols_journees):
             joueurs_mc = []
             for ligne, joueurs in equipe.items():
                 for j in joueurs:
-                    stats = get_stats_joueur_mc(j, cols_journees, df)
-                    if stats:
-                        joueurs_mc.append(stats)
-                    else:
-                        joueurs_mc.append({
-                            'nom': j['nom'],
-                            'ligne': ligne,
-                            'moyenne': j['note_pred'] or 5.0,
-                            'ecart_type': 1.0,
-                            'buts': j['buts']
-                        })
+                    # Chercher les stats réelles dans le df
+                    row = df[df['Joueur'].str.lower() == j['nom'].lower()]
+                    if len(row) > 0:
+                        row = row.iloc[0]
+                        notes = [row[col] for col in cols_journees if row[col] > 0]
+                        if len(notes) >= 3:
+                            buts = pd.to_numeric(row.get('Buts', 0), errors='coerce')
+                            matchs = len(notes)
+                            buts_par_match = buts / matchs if matchs > 0 and not pd.isna(buts) else 0
+                            joueurs_mc.append({
+                                'nom': j['nom'],
+                                'ligne': ligne,
+                                'moyenne': float(np.mean(notes)),
+                                'ecart_type': float(np.std(notes)),
+                                'buts': float(buts_par_match)
+                            })
+                            continue
+                    # Fallback si joueur non trouvé
+                    joueurs_mc.append({
+                        'nom': j['nom'],
+                        'ligne': ligne,
+                        'moyenne': j['note_pred'] or 5.0,
+                        'ecart_type': 1.0,
+                        'buts': j['buts']
+                    })
             return joueurs_mc
 
         joueurs_moi_mc = equipe_vers_mc(equipe_moi)
         joueurs_adv_mc = equipe_vers_mc(equipe_adv)
-        st.write(f"🔍 Debug MC : {len(joueurs_moi_mc)} joueurs moi, {len(joueurs_adv_mc)} joueurs adv")
+
+        # Debug
+        st.write(f"🔍 {len(joueurs_moi_mc)} joueurs MC moi | {len(joueurs_adv_mc)} joueurs MC adv")
         if joueurs_moi_mc:
-        st.write(f"Premier joueur moi : {joueurs_moi_mc[0]}")
-        if joueurs_adv_mc:
-        st.write(f"Premier joueur adv : {joueurs_adv_mc[0]}")
-      
+            j0 = joueurs_moi_mc[0]
+            st.write(f"Ex: {j0['nom']} | moy={j0['moyenne']:.2f} | std={j0['ecart_type']:.2f} | buts={j0['buts']:.2f}")
+
         # Bonus adverse
         bonus_adv_key = bonus_key_map.get(bonus_adv_restant, None)
 
-        # ============================================================
-        # SIMULATION SANS BONUS
-        # ============================================================
-
+        # Simulation sans bonus
         with st.spinner("🔄 Simulation en cours (500 scénarios)..."):
             res_sb = monte_carlo_match(
                 joueurs_moi_mc, joueurs_adv_mc,
                 n_simulations=500
             )
 
-        # ============================================================
-        # RÉSULTAT SANS BONUS
-        # ============================================================
-
+        # Résultat sans bonus
         st.subheader("📊 Résultat simulé — 500 scénarios")
 
         col_s1, col_s2, col_s3 = st.columns([2, 1, 2])
@@ -246,10 +255,7 @@ def afficher_adversaire(df, cols_journees):
             st.metric("Score moyen prévu",
                      f"{res_sb['score_moy_moi']} - {res_sb['score_moy_adv']}")
 
-        # ============================================================
-        # RECOMMANDATION CAPITAINE
-        # ============================================================
-
+        # Recommandation capitaine
         st.markdown("---")
         st.subheader("🎖️ Recommandation capitaine")
         candidats_cap = []
@@ -275,10 +281,7 @@ def afficher_adversaire(df, cols_journees):
             meilleur_cap = max(candidats_cap, key=lambda x: x[3])
             st.success(f"🎖️ **{meilleur_cap[0]}** ({meilleur_cap[1]}) — Note prédite : {meilleur_cap[2]}")
 
-        # ============================================================
-        # TEST AUTOMATIQUE DE TOUS LES BONUS
-        # ============================================================
-
+        # Test automatique de tous les bonus
         st.markdown("---")
         st.subheader("🎯 Recommandation Gazon Stats")
 
@@ -289,7 +292,6 @@ def afficher_adversaire(df, cols_journees):
             with st.spinner("🔄 Test des bonus en cours..."):
                 for bonus in mes_bonus_dispo:
                     bonus_key = bonus_key_map.get(bonus, None)
-                    j_uber = joueur_uber if bonus_key == 'uber_eats' else None
                     res_b = monte_carlo_match(
                         joueurs_moi_mc, joueurs_adv_mc,
                         n_simulations=500,
@@ -318,11 +320,9 @@ def afficher_adversaire(df, cols_journees):
                     f"Score: {res['score_moy_moi']}-{res['score_moy_adv']}"
                 )
 
-            # Meilleur bonus
             meilleur = max(resultats_bonus.items(), key=lambda x: x[1]['victoires'])
             nom_meilleur = meilleur[0].split('—')[0].strip()
             res_meilleur = meilleur[1]
-            gain_meilleur = round(res_meilleur['victoires'] - res_sb['victoires'], 1)
 
             st.markdown("---")
 
@@ -336,7 +336,7 @@ def afficher_adversaire(df, cols_journees):
                 else:
                     st.success(f"✅ **Gardez vos bonus** — Favori à {vic}%, bonus non indispensable !")
             elif vic >= 40:
-                if gain_meilleur >= 10:
+                if round(res_meilleur['victoires'] - vic, 1) >= 10:
                     st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Match serré ({vic}%), le bonus fait passer à {res_meilleur['victoires']}% !")
                 else:
                     st.warning(f"⚠️ **Match très serré ({vic}%)** — Aucun bonus ne change significativement le résultat")
@@ -366,10 +366,7 @@ def afficher_adversaire(df, cols_journees):
         if "Miroir" in bonus_adv_restant:
             st.warning("🪞 **L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
 
-        # ============================================================
-        # DÉTAILS ÉQUIPES
-        # ============================================================
-
+        # Détails équipes
         st.markdown("---")
         col_eq1, col_eq2 = st.columns(2)
 
