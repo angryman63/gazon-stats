@@ -216,3 +216,174 @@ def appliquer_bonus(equipe_moi, equipe_adv, mon_bonus, bonus_adv, joueur_uber=No
             }
 
     return eq_moi, eq_adv, ann_adv, ann_moi
+
+
+def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=None, bonus_adv=None):
+    victoires = 0
+    nuls = 0
+    defaites = 0
+    scores_moi = []
+    scores_adv = []
+
+    for _ in range(n_simulations):
+        # Générer notes aléatoires
+        notes_moi = {}
+        for j in joueurs_moi:
+            note = np.random.normal(j['moyenne'], j['ecart_type'])
+            note = max(0, min(10, note))
+            notes_moi[j['nom']] = {
+                'note': note,
+                'ligne': j['ligne'],
+                'buts': j['buts']
+            }
+
+        notes_adv = {}
+        for j in joueurs_adv:
+            note = np.random.normal(j['moyenne'], j['ecart_type'])
+            note = max(0, min(10, note))
+            notes_adv[j['nom']] = {
+                'note': note,
+                'ligne': j['ligne'],
+                'buts': j['buts']
+            }
+
+        # Appliquer bonus mon équipe
+        if bonus_moi == 'zahia':
+            for k in notes_moi:
+                if notes_moi[k]['ligne'] != 'GB':
+                    notes_moi[k]['note'] = min(10, notes_moi[k]['note'] + 1)
+        elif bonus_moi == 'suarez':
+            for k in notes_adv:
+                if notes_adv[k]['ligne'] == 'GB':
+                    notes_adv[k]['note'] = max(0, notes_adv[k]['note'] - 1)
+        elif bonus_moi == 'cheat_code':
+            for k in notes_adv:
+                if notes_adv[k]['ligne'] != 'GB':
+                    notes_adv[k]['note'] = max(0, notes_adv[k]['note'] - 0.5)
+
+        # Appliquer bonus adverse
+        if bonus_adv == 'zahia':
+            for k in notes_adv:
+                if notes_adv[k]['ligne'] != 'GB':
+                    notes_adv[k]['note'] = min(10, notes_adv[k]['note'] + 1)
+        elif bonus_adv == 'cheat_code':
+            for k in notes_moi:
+                if notes_moi[k]['ligne'] != 'GB':
+                    notes_moi[k]['note'] = max(0, notes_moi[k]['note'] - 0.5)
+
+        # Moyennes par ligne
+        def moy_ligne(notes, ligne):
+            vals = [v['note'] for v in notes.values() if v['ligne'] == ligne]
+            return np.mean(vals) if vals else 5.0
+
+        moy_def_adv = moy_ligne(notes_adv, 'DEF')
+        moy_mil_adv = moy_ligne(notes_adv, 'MIL')
+        moy_att_adv = moy_ligne(notes_adv, 'ATT')
+        note_gb_adv = next((v['note'] for v in notes_adv.values() if v['ligne'] == 'GB'), 5.0)
+
+        moy_def_moi = moy_ligne(notes_moi, 'DEF')
+        moy_mil_moi = moy_ligne(notes_moi, 'MIL')
+        moy_att_moi = moy_ligne(notes_moi, 'ATT')
+        note_gb_moi = next((v['note'] for v in notes_moi.values() if v['ligne'] == 'GB'), 5.0)
+
+        # Buts réels
+        score_moi = sum(1 for v in notes_moi.values()
+                       if v['buts'] > 0 and np.random.random() < v['buts'])
+        score_adv = sum(1 for v in notes_adv.values()
+                       if v['buts'] > 0 and np.random.random() < v['buts'])
+
+        # Valise
+        if bonus_moi == 'valise':
+            score_adv = max(0, score_adv - 1)
+        if bonus_adv == 'valise':
+            score_moi = max(0, score_moi - 1)
+
+        # Arrêt MPG gardien
+        if note_gb_moi >= 8:
+            score_adv = max(0, score_adv - 1)
+        if note_gb_adv >= 8:
+            score_moi = max(0, score_moi - 1)
+
+        # Buts MPG mon équipe
+        for nom, j in notes_moi.items():
+            if j['note'] < 5.5 or j['buts'] > 0:
+                continue
+            note_c = j['note']
+            if j['ligne'] == 'ATT':
+                lignes = [(moy_def_adv, -1.0), (note_gb_adv, -0.5)]
+            elif j['ligne'] == 'MIL':
+                lignes = [(moy_mil_adv, -1.0), (moy_def_adv, -0.5), (note_gb_adv, -0.5)]
+            elif j['ligne'] == 'DEF':
+                lignes = [(moy_att_adv, -1.0), (moy_mil_adv, -0.5),
+                          (moy_def_adv, -0.5), (note_gb_adv, -0.5)]
+            else:
+                continue
+            but = True
+            for moy, malus in lignes:
+                if note_c < moy:
+                    but = False
+                    break
+                note_c += malus
+            if but:
+                score_moi += 1
+
+        # Buts MPG adversaire
+        for nom, j in notes_adv.items():
+            if j['note'] < 5.5 or j['buts'] > 0:
+                continue
+            note_c = j['note']
+            if j['ligne'] == 'ATT':
+                lignes = [(moy_def_moi, -1.0), (note_gb_moi, -0.5)]
+            elif j['ligne'] == 'MIL':
+                lignes = [(moy_mil_moi, -1.0), (moy_def_moi, -0.5), (note_gb_moi, -0.5)]
+            elif j['ligne'] == 'DEF':
+                lignes = [(moy_att_moi, -1.0), (moy_mil_moi, -0.5),
+                          (moy_def_moi, -0.5), (note_gb_moi, -0.5)]
+            else:
+                continue
+            but = True
+            for moy, malus in lignes:
+                if note_c <= moy:
+                    but = False
+                    break
+                note_c += malus
+            if but:
+                score_adv += 1
+
+        scores_moi.append(score_moi)
+        scores_adv.append(score_adv)
+
+        if score_moi > score_adv:
+            victoires += 1
+        elif score_moi < score_adv:
+            defaites += 1
+        else:
+            nuls += 1
+
+    return {
+        'victoires': round(victoires / n_simulations * 100, 1),
+        'nuls': round(nuls / n_simulations * 100, 1),
+        'defaites': round(defaites / n_simulations * 100, 1),
+        'score_moy_moi': round(np.mean(scores_moi), 1),
+        'score_moy_adv': round(np.mean(scores_adv), 1),
+    }
+
+def get_stats_joueur_mc(info_joueur, cols_journees, df):
+    nom = info_joueur['nom']
+    row = df[df['Joueur'].str.lower() == nom.lower()]
+    if len(row) == 0:
+        return None
+    row = row.iloc[0]
+    notes = [row[col] for col in cols_journees if row[col] > 0]
+    if len(notes) < 3:
+        return None
+    buts = pd.to_numeric(row.get('Buts', 0), errors='coerce')
+    matchs = len(notes)
+    buts_par_match = buts / matchs if matchs > 0 and not pd.isna(buts) else 0
+    return {
+        'nom': nom,
+        'ligne': poste_vers_ligne(info_joueur['poste']),
+        'moyenne': np.mean(notes),
+        'ecart_type': np.std(notes),
+        'buts': buts_par_match
+    }
