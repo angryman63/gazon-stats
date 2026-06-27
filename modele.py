@@ -1,13 +1,5 @@
-# ============================================================
-# GAZON STATS — MODÈLE COMPLET
-# ============================================================
-
 import pandas as pd
 import numpy as np
-
-# ============================================================
-# 1. NETTOYAGE DES NOTES
-# ============================================================
 
 def nettoyer_note(valeur):
     if pd.isna(valeur):
@@ -22,159 +14,38 @@ def nettoyer_note(valeur):
     except:
         return 0
 
-# ============================================================
-# 2. MODÈLE PRÉDICTIF 6J
-# ============================================================
-
-poids_6j = [0.30, 0.23, 0.18, 0.14, 0.10, 0.05]
-
-def predire(notes, poids):
-    notes_jouees = [n for n in notes if n > 0]
-    if len(notes_jouees) < len(poids):
-        return None
-    dernieres = notes_jouees[:len(poids)]
-    return sum(note * poids[i] for i, note in enumerate(dernieres))
-
-def predire_note_j(id_joueur, col_cible, df_l1):
-    nom = nom_depuis_id(id_joueur)
-    club = club_depuis_id(id_joueur)
-    row = df_l1[
-        (df_l1['Joueur'].str.lower() == nom.lower()) &
-        (df_l1['Club'].str.lower() == club.lower())
-    ]
-    if len(row) == 0:
-        return None
-    j_num = int(col_cible[1:])
-    cols_prec = [f'D{j_num - i}' for i in range(1, 7) if f'D{j_num - i}' in df_l1.columns]
-    notes = []
-    for col in cols_prec:
-        note = nettoyer_note(row[col].values[0])
-        if note > 0:
-            notes.append(note)
-    if len(notes) < 3:
-        return None
-    total_poids = sum(poids_6j[:len(notes)])
-    return round(sum(n * poids_6j[i] for i, n in enumerate(notes)) / total_poids, 2)
-
-# ============================================================
-# 3. BACKTESTING
-# ============================================================
-
-def backtesting_championnat(nom, fichier):
-    print(f"\n=== {nom} ===")
-    df_champ = pd.read_excel(fichier)
-    cols_j = [col for col in df_champ.columns if str(col).startswith('D') and str(col)[1:].isdigit()]
-    cols_j = sorted(cols_j, key=lambda x: int(x[1:]), reverse=True)
-    for col in cols_j:
-        df_champ[col] = df_champ[col].apply(nettoyer_note)
-    print(f"Joueurs : {len(df_champ)} | Journées : {len(cols_j)}")
-    resultats = []
-    for idx, row in df_champ.iterrows():
-        notes = [row[col] for col in cols_j]
-        notes_jouees = [n for n in notes if n > 0]
-        for i in range(6, len(notes_jouees)):
-            note_reelle = notes_jouees[i]
-            pred_6j = predire(notes_jouees[i-6:i][::-1], poids_6j)
-            if pred_6j is not None:
-                resultats.append({
-                    'Note_reelle': note_reelle,
-                    'Pred_6J': pred_6j
-                })
-    df_res = pd.DataFrame(resultats)
-    erreur = (df_res['Note_reelle'] - df_res['Pred_6J']).abs().mean()
-    erreur_moyenne = df_res['Note_reelle'].apply(
-        lambda x: abs(x - df_res['Note_reelle'].mean())
-    ).mean()
-    print(f"Prédictions : {len(df_res)}")
-    print(f"Erreur modèle 6J : {erreur:.3f}")
-    print(f"Erreur si on prédit toujours la moyenne : {erreur_moyenne:.3f}")
-    print(f"Amélioration vs moyenne : {(erreur_moyenne - erreur):.3f}")
-    return erreur, len(df_res)
-
-# ============================================================
-# 4. UTILITAIRES JOUEURS
-# ============================================================
-
-def nom_depuis_id(id_joueur):
-    return '_'.join(id_joueur.split('_')[:-1])
-
-def club_depuis_id(id_joueur):
-    return id_joueur.split('_')[-1]
-
-def get_note_id(id_joueur, col, df_brut):
-    nom = nom_depuis_id(id_joueur)
-    club = club_depuis_id(id_joueur)
-    row = df_brut[
-        (df_brut['Joueur'].str.lower() == nom.lower()) &
-        (df_brut['Club'].str.lower() == club.lower())
-    ]
-    if len(row) == 0:
-        return None, 0
-    val = str(row[col].values[0])
-    buts = val.count('*') if '*' in val and '(' not in val else 0
-    note = nettoyer_note(val)
-    return note if note > 0 else None, buts
-
-def buts_attendus_id(id_joueur, df_l1):
-    nom = nom_depuis_id(id_joueur)
-    club = club_depuis_id(id_joueur)
-    row = df_l1[
-        (df_l1['Joueur'].str.lower() == nom.lower()) &
-        (df_l1['Club'].str.lower() == club.lower())
-    ]
-    if len(row) == 0:
-        return 0
-    buts = pd.to_numeric(row['Buts'].values[0], errors='coerce')
-    matchs = sum(1 for col in [f'D{i}' for i in range(1, 35)]
-                 if col in df_l1.columns and nettoyer_note(row[col].values[0]) > 0)
-    if matchs == 0 or pd.isna(buts):
-        return 0
-    return buts / matchs
-
-# ============================================================
-# 5. MODÈLE MERCATO
-# ============================================================
-
-clutch_poids = {
-    'G': 0.35, 'A': 0.30, 'MO': 0.20,
-    'DL': 0.15, 'MD': 0.10, 'DC': 0.10
-}
-
-def calculer_clutch(id_joueur, cols_j, df_l1):
-    nom = nom_depuis_id(id_joueur)
-    club = club_depuis_id(id_joueur)
-    row = df_l1[
-        (df_l1['Joueur'].str.lower() == nom.lower()) &
-        (df_l1['Club'].str.lower() == club.lower())
-    ]
-    if len(row) == 0:
-        return 0
-    notes = [nettoyer_note(row[col].values[0]) for col in cols_j if col in df_l1.columns]
+def calculer_clutch(row, cols_journees, seuil=7):
+    notes = [row[col] for col in cols_journees if col in row.index]
     notes_jouees = [n for n in notes if n > 0]
     if len(notes_jouees) == 0:
         return 0
-    return len([n for n in notes_jouees if n >= 7]) / len(notes_jouees)
+    return len([n for n in notes_jouees if n >= seuil]) / len(notes_jouees)
 
-def calculer_score_mercato(row, strategie):
-    cp = clutch_poids.get(row['Poste'], 0.15)
-    clutch = row['Clutch_norm'] * 10
-    note = row['Note']
-    variation = row['Variation_norm'] * 10
-    ratio = row['Ratio_norm'] * 10
-    titu = row['%Titu'] / 100 * 10
-    pop = row['Popularite_norm'] * 10
-    if strategie == 'stars':
-        return note * 0.40 + clutch * cp + variation * 0.15 + titu * 0.10 + pop * 0.05
-    elif strategie == 'valeurs_sures':
-        return note * 0.35 + clutch * (cp * 0.8) + variation * 0.20 + ratio * 0.15 + titu * 0.10
-    elif strategie == 'equilibre':
-        return note * 0.30 + ratio * 0.25 + clutch * (cp * 0.7) + variation * 0.15 + titu * 0.10
-    elif strategie == 'pepites':
-        return ratio * 0.40 + note * 0.25 + clutch * (cp * 0.5) + variation * 0.15 + titu * 0.10
+def compter_matchs(row, cols_journees):
+    return sum(1 for col in cols_journees if row[col] > 0)
 
-def alerte_blessure(row):
-    indispo = row['Indispo ?']
-    absences = row['Absences_recentes']
+def absences_consecutives(row, cols_journees):
+    notes = [row[col] for col in cols_journees]
+    count = 0
+    for n in notes:
+        if n == 0:
+            count += 1
+        else:
+            break
+    return count
+
+def predire_note(row, cols_journees):
+    notes = [row[col] for col in cols_journees if row[col] > 0]
+    if len(notes) < 3:
+        return None
+    poids = [0.30, 0.23, 0.18, 0.14, 0.10, 0.05]
+    notes_6 = notes[:6]
+    total_poids = sum(poids[:len(notes_6)])
+    return round(sum(n * poids[i] for i, n in enumerate(notes_6)) / total_poids, 2)
+
+def alerte_blessure(row, cols_journees):
+    indispo = row.get('Indispo ?', False)
+    absences = absences_consecutives(row, cols_journees)
     if indispo == True:
         if absences >= 8:
             return f"🚑 Blessé ({absences} matchs)"
@@ -187,137 +58,161 @@ def alerte_blessure(row):
             return f"🐢 Retour ({absences} matchs)"
     return ""
 
-# ============================================================
-# 6. SIMULATION MATCH MPG
-# ============================================================
+def etiquette_regularite(valeur, q25, q50, q75):
+    if valeur >= q75:
+        return "1 ✅ Valeur sûre"
+    elif valeur >= q50:
+        return "2 👌 Fiable"
+    elif valeur >= q25:
+        return "3 ⚠️ Capricieux"
+    else:
+        return "4 🐐 Rotaldo"
+
+def get_joueur_info(nom_joueur, df, cols_journees):
+    row = df[df['Joueur'].str.lower() == nom_joueur.strip().lower()]
+    if len(row) == 0:
+        return None
+    row = row.iloc[0]
+    note_pred = predire_note(row, cols_journees)
+    buts_moy = pd.to_numeric(row.get('Buts', 0), errors='coerce')
+    matchs = compter_matchs(row, cols_journees)
+    buts_par_match = (buts_moy / matchs) if matchs > 0 and not pd.isna(buts_moy) else 0
+    clutch_7 = calculer_clutch(row, cols_journees, seuil=7)
+    clutch_8 = calculer_clutch(row, cols_journees, seuil=8)
+    notes_jouees = [row[col] for col in cols_journees if row[col] > 0]
+    regularite = 1 / (1 + np.std(notes_jouees)) if notes_jouees else 0
+    return {
+        'nom': row['Joueur'],
+        'poste': row.get('Poste', 'MO'),
+        'note_pred': note_pred,
+        'buts': buts_par_match,
+        'clutch_7': clutch_7,
+        'clutch_8': clutch_8,
+        'regularite': regularite,
+        'alerte': alerte_blessure(row, cols_journees)
+    }
+
+def poste_vers_ligne(poste):
+    mapping = {'G': 'GB', 'DC': 'DEF', 'DL': 'DEF', 'MD': 'MIL', 'MO': 'MIL', 'A': 'ATT'}
+    return mapping.get(poste, 'MIL')
 
 def simuler_buts_mpg(equipe_att, equipe_def, domicile=True):
     buts_mpg = []
-    moy_att_adv = np.mean([j['note'] for j in equipe_def.get('ATT', [])] or [0])
-    moy_mil_adv = np.mean([j['note'] for j in equipe_def.get('MIL', [])] or [0])
-    moy_def_adv = np.mean([j['note'] for j in equipe_def.get('DEF', [])] or [0])
-    note_gb_adv = equipe_def['GB'][0]['note'] if equipe_def.get('GB') else 5
+    moy_att = np.mean([j['note_pred'] for j in equipe_def.get('ATT', []) if j['note_pred']] or [5])
+    moy_mil = np.mean([j['note_pred'] for j in equipe_def.get('MIL', []) if j['note_pred']] or [5])
+    moy_def = np.mean([j['note_pred'] for j in equipe_def.get('DEF', []) if j['note_pred']] or [5])
+    note_gb = equipe_def['GB'][0]['note_pred'] if equipe_def.get('GB') and equipe_def['GB'][0]['note_pred'] else 5
 
     for ligne, joueurs in equipe_att.items():
         if ligne == 'GB':
             continue
-        for joueur in joueurs:
-            note = joueur['note']
-            nom = joueur['joueur']
-            if note < 5.5 or joueur.get('buts', 0) > 0:
+        for j in joueurs:
+            note = j['note_pred']
+            if note is None or note < 5.5 or j.get('buts', 0) > 0:
                 continue
             note_courante = note
             if ligne == 'ATT':
-                lignes_a_franchir = [(moy_def_adv, -1.0), (note_gb_adv, -0.5)]
+                lignes = [(moy_def, -1.0), (note_gb, -0.5)]
             elif ligne == 'MIL':
-                lignes_a_franchir = [(moy_mil_adv, -1.0), (moy_def_adv, -0.5), (note_gb_adv, -0.5)]
+                lignes = [(moy_mil, -1.0), (moy_def, -0.5), (note_gb, -0.5)]
             elif ligne == 'DEF':
-                lignes_a_franchir = [(moy_att_adv, -1.0), (moy_mil_adv, -0.5), (moy_def_adv, -0.5), (note_gb_adv, -0.5)]
-            but_mpg = True
-            for moy_adverse, malus in lignes_a_franchir:
-                passe = note_courante >= moy_adverse if domicile else note_courante > moy_adverse
+                lignes = [(moy_att, -1.0), (moy_mil, -0.5), (moy_def, -0.5), (note_gb, -0.5)]
+            but = True
+            for moy, malus in lignes:
+                passe = note_courante >= moy if domicile else note_courante > moy
                 if not passe:
-                    but_mpg = False
+                    but = False
                     break
                 note_courante += malus
-            if but_mpg:
-                buts_mpg.append(nom)
+            if but:
+                buts_mpg.append(j['nom'])
     return buts_mpg
 
-def simuler_match(eq_a, eq_b):
-    buts_reels_a = sum(j['buts'] for ligne in eq_a.values() for j in ligne)
-    buts_reels_b = sum(j['buts'] for ligne in eq_b.values() for j in ligne)
-    if eq_a['GB'][0]['note'] >= 8:
-        buts_reels_b = max(0, buts_reels_b - 1)
-    if eq_b['GB'][0]['note'] >= 8:
-        buts_reels_a = max(0, buts_reels_a - 1)
-    buts_mpg_a = simuler_buts_mpg(eq_a, eq_b, domicile=True)
-    buts_mpg_b = simuler_buts_mpg(eq_b, eq_a, domicile=False)
-    rotaldos_a = sum(1 for ligne in eq_a.values() for j in ligne if j['joueur'] == 'Rotaldo')
-    rotaldos_b = sum(1 for ligne in eq_b.values() for j in ligne if j['joueur'] == 'Rotaldo')
-    score_a = buts_reels_a + len(buts_mpg_a) - rotaldos_a // 3
-    score_b = buts_reels_b + len(buts_mpg_b) - rotaldos_b // 3
-    return score_a, score_b, buts_mpg_a, buts_mpg_b
+def appliquer_bonus(equipe_moi, equipe_adv, mon_bonus, bonus_adv, joueur_uber=None):
+    import copy
+    eq_moi = copy.deepcopy(equipe_moi)
+    eq_adv = copy.deepcopy(equipe_adv)
+    ann_adv = 0
+    ann_moi = 0
 
-def appliquer_remplacements(equipe, remplacants, col, df_l1, df_brut, utiliser_prediction=False):
-    equipe_finale = {}
-    remplacants_utilises = []
-    pool_remplacants = []
-    for ligne, joueurs in remplacants.items():
-        for id_j, bonus in joueurs:
-            pool_remplacants.append((id_j, bonus, ligne))
+    # Mon bonus
+    if "Zahia" in mon_bonus:
+        for ligne, joueurs in eq_moi.items():
+            if ligne != 'GB':
+                for j in joueurs:
+                    if j['note_pred']:
+                        j['note_pred'] = min(10, j['note_pred'] + 1)
+    elif "Suarez" in mon_bonus:
+        if eq_adv.get('GB') and eq_adv['GB'][0]['note_pred']:
+            eq_adv['GB'][0]['note_pred'] = max(0, eq_adv['GB'][0]['note_pred'] - 1)
+    elif "Cheat Code" in mon_bonus:
+        for ligne, joueurs in eq_adv.items():
+            if ligne != 'GB':
+                for j in joueurs:
+                    if j['note_pred']:
+                        j['note_pred'] = max(0, j['note_pred'] - 0.5)
+    elif "Valise" in mon_bonus:
+        ann_adv = 1
+    elif "Uber Eats" in mon_bonus and joueur_uber:
+        for ligne, joueurs in eq_moi.items():
+            for j in joueurs:
+                if j['nom'] == joueur_uber and j['note_pred']:
+                    j['note_pred'] = min(10, j['note_pred'] + 1)
+    elif "Chapron" in mon_bonus:
+        meilleur_score = 0
+        meilleure_ligne = None
+        meilleur_idx = None
+        for ligne, joueurs in eq_adv.items():
+            if ligne == 'GB':
+                continue
+            for idx, j in enumerate(joueurs):
+                if j['note_pred'] and j['note_pred'] > meilleur_score:
+                    meilleur_score = j['note_pred']
+                    meilleure_ligne = ligne
+                    meilleur_idx = idx
+        if meilleure_ligne is not None:
+            eq_adv[meilleure_ligne][meilleur_idx] = {
+                'nom': 'Rotaldo', 'note_pred': 2.5, 'buts': 0,
+                'clutch_7': 0, 'clutch_8': 0, 'regularite': 0, 'alerte': ''
+            }
+    elif "Miroir" in mon_bonus and bonus_adv != "Aucun":
+        eq_moi, eq_adv, ann_adv, ann_moi = appliquer_bonus(eq_moi, eq_adv, bonus_adv, "Aucun", joueur_uber)
+        return eq_moi, eq_adv, ann_adv, ann_moi
 
-    for ligne, joueurs in equipe.items():
-        equipe_finale[ligne] = []
-        for id_j, bonus in joueurs:
-            nom = nom_depuis_id(id_j)
-            if utiliser_prediction:
-                note = predire_note_j(id_j, col, df_l1)
-                buts = buts_attendus_id(id_j, df_l1)
-            else:
-                note, buts = get_note_id(id_j, col, df_brut)
+    # Bonus adverse
+    if "Zahia" in bonus_adv:
+        for ligne, joueurs in eq_adv.items():
+            if ligne != 'GB':
+                for j in joueurs:
+                    if j['note_pred']:
+                        j['note_pred'] = min(10, j['note_pred'] + 1)
+    elif "Suarez" in bonus_adv:
+        if eq_moi.get('GB') and eq_moi['GB'][0]['note_pred']:
+            eq_moi['GB'][0]['note_pred'] = max(0, eq_moi['GB'][0]['note_pred'] - 1)
+    elif "Cheat Code" in bonus_adv:
+        for ligne, joueurs in eq_moi.items():
+            if ligne != 'GB':
+                for j in joueurs:
+                    if j['note_pred']:
+                        j['note_pred'] = max(0, j['note_pred'] - 0.5)
+    elif "Valise" in bonus_adv:
+        ann_moi = 1
+    elif "Chapron" in bonus_adv:
+        meilleur_score = 0
+        meilleure_ligne = None
+        meilleur_idx = None
+        for ligne, joueurs in eq_moi.items():
+            if ligne == 'GB':
+                continue
+            for idx, j in enumerate(joueurs):
+                if j['note_pred'] and j['note_pred'] > meilleur_score:
+                    meilleur_score = j['note_pred']
+                    meilleure_ligne = ligne
+                    meilleur_idx = idx
+        if meilleure_ligne is not None:
+            eq_moi[meilleure_ligne][meilleur_idx] = {
+                'nom': 'Rotaldo', 'note_pred': 2.5, 'buts': 0,
+                'clutch_7': 0, 'clutch_8': 0, 'regularite': 0, 'alerte': ''
+            }
 
-            if note is None:
-                remplacant_trouve = None
-                for r_id, r_bonus in remplacants.get(ligne, []):
-                    if r_id not in remplacants_utilises:
-                        if utiliser_prediction:
-                            note_r = predire_note_j(r_id, col, df_l1)
-                            buts_r = buts_attendus_id(r_id, df_l1)
-                        else:
-                            note_r, buts_r = get_note_id(r_id, col, df_brut)
-                        if note_r is not None:
-                            remplacant_trouve = (r_id, note_r, buts_r, r_bonus)
-                            remplacants_utilises.append(r_id)
-                            break
-                if remplacant_trouve is None:
-                    for r_id, r_bonus, r_ligne in pool_remplacants:
-                        if r_id not in remplacants_utilises:
-                            if utiliser_prediction:
-                                note_r = predire_note_j(r_id, col, df_l1)
-                                buts_r = buts_attendus_id(r_id, df_l1)
-                            else:
-                                note_r, buts_r = get_note_id(r_id, col, df_brut)
-                            if note_r is not None:
-                                remplacant_trouve = (r_id, note_r, buts_r, r_bonus)
-                                remplacants_utilises.append(r_id)
-                                break
-                if remplacant_trouve:
-                    equipe_finale[ligne].append({
-                        'joueur': nom_depuis_id(remplacant_trouve[0]),
-                        'note': remplacant_trouve[1] + remplacant_trouve[3],
-                        'buts': remplacant_trouve[2],
-                        'statut': f'Remplaçant de {nom}'
-                    })
-                else:
-                    equipe_finale[ligne].append({
-                        'joueur': 'Rotaldo',
-                        'note': 2.5,
-                        'buts': 0,
-                        'statut': f'Rotaldo ({nom})'
-                    })
-            else:
-                equipe_finale[ligne].append({
-                    'joueur': nom,
-                    'note': note + bonus,
-                    'buts': buts,
-                    'statut': 'Titulaire'
-                })
-    return equipe_finale
-
-# ============================================================
-# 7. CALENDRIER
-# ============================================================
-
-def generer_calendrier(nb_equipes, nb_journees):
-    equipes = list(range(nb_equipes))
-    calendrier = []
-    for j in range(nb_journees):
-        equipes_rot = equipes[1:]
-        idx = j % (nb_equipes - 1)
-        equipes_rot = equipes_rot[idx:] + equipes_rot[:idx]
-        paires = [(equipes[0], equipes_rot[0])]
-        for k in range(1, nb_equipes // 2):
-            paires.append((equipes_rot[k], equipes_rot[nb_equipes - 2 - k]))
-        calendrier.append(paires)
-    return calendrier
+    return eq_moi, eq_adv, ann_adv, ann_moi
