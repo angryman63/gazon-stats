@@ -202,7 +202,12 @@ def afficher_adversaire(df, cols_journees):
 
         joueurs_moi_mc = equipe_vers_mc(equipe_moi)
         joueurs_adv_mc = equipe_vers_mc(equipe_adv)
-
+        st.write(f"🔍 Debug MC : {len(joueurs_moi_mc)} joueurs moi, {len(joueurs_adv_mc)} joueurs adv")
+        if joueurs_moi_mc:
+        st.write(f"Premier joueur moi : {joueurs_moi_mc[0]}")
+        if joueurs_adv_mc:
+        st.write(f"Premier joueur adv : {joueurs_adv_mc[0]}")
+      
         # Bonus adverse
         bonus_adv_key = bonus_key_map.get(bonus_adv_restant, None)
 
