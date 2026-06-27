@@ -58,12 +58,12 @@ def alerte_blessure(row, cols_journees):
             return f"🐢 Retour ({absences} matchs)"
     return ""
 
-def etiquette_regularite(valeur, q25, q50, q75):
-    if valeur >= q75:
-        return "1 ✅ Valeur sûre"
+def etiquette_regularite(valeur, q10, q50, q80):
+    if valeur >= q80:
+        return "1 💎 Béton"
     elif valeur >= q50:
         return "2 👌 Fiable"
-    elif valeur >= q25:
+    elif valeur >= q10:
         return "3 ⚠️ Capricieux"
     else:
         return "4 🐐 Rotaldo"
@@ -139,7 +139,6 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
     scores_adv = []
 
     for _ in range(n_simulations):
-        # Générer notes aléatoires
         notes_moi = {}
         for j in joueurs_moi:
             note = np.random.normal(j['moyenne'], j['ecart_type'])
@@ -152,7 +151,6 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
             note = max(0, min(10, note))
             notes_adv[j['nom']] = {'note': note, 'ligne': j['ligne'], 'buts': j['buts']}
 
-        # Bonus mon équipe
         if bonus_moi == 'zahia':
             for k in notes_moi:
                 if notes_moi[k]['ligne'] != 'GB':
@@ -180,7 +178,6 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
             if meilleur_nom:
                 notes_adv[meilleur_nom]['note'] = 2.5
 
-        # Bonus adverse
         if bonus_adv == 'zahia':
             for k in notes_adv:
                 if notes_adv[k]['ligne'] != 'GB':
@@ -203,7 +200,6 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
             if meilleur_nom:
                 notes_moi[meilleur_nom]['note'] = 2.5
 
-        # Moyennes par ligne
         def moy_ligne(notes, ligne):
             vals = [v['note'] for v in notes.values() if v['ligne'] == ligne]
             return np.mean(vals) if vals else 5.0
@@ -218,19 +214,16 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
         moy_att_moi = moy_ligne(notes_moi, 'ATT')
         note_gb_moi = next((v['note'] for v in notes_moi.values() if v['ligne'] == 'GB'), 5.0)
 
-        # Buts réels
         score_moi = sum(1 for v in notes_moi.values()
                         if v['buts'] > 0 and np.random.random() < v['buts'])
         score_adv = sum(1 for v in notes_adv.values()
                         if v['buts'] > 0 and np.random.random() < v['buts'])
 
-        # Arrêt MPG gardien (sur buts réels)
         if note_gb_moi >= 8:
             score_adv = max(0, score_adv - 1)
         if note_gb_adv >= 8:
             score_moi = max(0, score_moi - 1)
 
-        # Buts MPG mon équipe
         for nom, j in notes_moi.items():
             if j['note'] < 5.5 or j['buts'] > 0:
                 continue
@@ -254,7 +247,6 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
             if but:
                 score_moi += 1
 
-        # Buts MPG adversaire
         for nom, j in notes_adv.items():
             if j['note'] < 5.5 or j['buts'] > 0:
                 continue
@@ -270,7 +262,6 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
                 continue
             but = True
             for moy, malus in lignes:
-                # Adversaire est à l'extérieur si domicile=True
                 passe = note_c >= moy if not domicile else note_c > moy
                 if not passe:
                     but = False
@@ -279,7 +270,6 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
             if but:
                 score_adv += 1
 
-        # Valise sur score FINAL (buts réels + buts MPG)
         if bonus_moi == 'valise':
             score_adv = max(0, score_adv - 1)
         if bonus_adv == 'valise':
