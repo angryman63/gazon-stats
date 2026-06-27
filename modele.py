@@ -128,97 +128,10 @@ def simuler_buts_mpg(equipe_att, equipe_def, domicile=True):
                 buts_mpg.append(j['nom'])
     return buts_mpg
 
-def appliquer_bonus(equipe_moi, equipe_adv, mon_bonus, bonus_adv, joueur_uber=None):
-    import copy
-    eq_moi = copy.deepcopy(equipe_moi)
-    eq_adv = copy.deepcopy(equipe_adv)
-    ann_adv = 0
-    ann_moi = 0
 
-    # Mon bonus
-    if "Zahia" in mon_bonus:
-        for ligne, joueurs in eq_moi.items():
-            if ligne != 'GB':
-                for j in joueurs:
-                    if j['note_pred']:
-                        j['note_pred'] = min(10, j['note_pred'] + 1)
-    elif "Suarez" in mon_bonus:
-        if eq_adv.get('GB') and eq_adv['GB'][0]['note_pred']:
-            eq_adv['GB'][0]['note_pred'] = max(0, eq_adv['GB'][0]['note_pred'] - 1)
-    elif "Cheat Code" in mon_bonus:
-        for ligne, joueurs in eq_adv.items():
-            if ligne != 'GB':
-                for j in joueurs:
-                    if j['note_pred']:
-                        j['note_pred'] = max(0, j['note_pred'] - 0.5)
-    elif "Valise" in mon_bonus:
-        ann_adv = 1
-    elif "Uber Eats" in mon_bonus and joueur_uber:
-        for ligne, joueurs in eq_moi.items():
-            for j in joueurs:
-                if j['nom'] == joueur_uber and j['note_pred']:
-                    j['note_pred'] = min(10, j['note_pred'] + 1)
-    elif "Chapron" in mon_bonus:
-        meilleur_score = 0
-        meilleure_ligne = None
-        meilleur_idx = None
-        for ligne, joueurs in eq_adv.items():
-            if ligne == 'GB':
-                continue
-            for idx, j in enumerate(joueurs):
-                if j['note_pred'] and j['note_pred'] > meilleur_score:
-                    meilleur_score = j['note_pred']
-                    meilleure_ligne = ligne
-                    meilleur_idx = idx
-        if meilleure_ligne is not None:
-            eq_adv[meilleure_ligne][meilleur_idx] = {
-                'nom': 'Rotaldo', 'note_pred': 2.5, 'buts': 0,
-                'clutch_7': 0, 'clutch_8': 0, 'regularite': 0, 'alerte': ''
-            }
-    elif "Miroir" in mon_bonus and bonus_adv != "Aucun":
-        eq_moi, eq_adv, ann_adv, ann_moi = appliquer_bonus(eq_moi, eq_adv, bonus_adv, "Aucun", joueur_uber)
-        return eq_moi, eq_adv, ann_adv, ann_moi
-
-    # Bonus adverse
-    if "Zahia" in bonus_adv:
-        for ligne, joueurs in eq_adv.items():
-            if ligne != 'GB':
-                for j in joueurs:
-                    if j['note_pred']:
-                        j['note_pred'] = min(10, j['note_pred'] + 1)
-    elif "Suarez" in bonus_adv:
-        if eq_moi.get('GB') and eq_moi['GB'][0]['note_pred']:
-            eq_moi['GB'][0]['note_pred'] = max(0, eq_moi['GB'][0]['note_pred'] - 1)
-    elif "Cheat Code" in bonus_adv:
-        for ligne, joueurs in eq_moi.items():
-            if ligne != 'GB':
-                for j in joueurs:
-                    if j['note_pred']:
-                        j['note_pred'] = max(0, j['note_pred'] - 0.5)
-    elif "Valise" in bonus_adv:
-        ann_moi = 1
-    elif "Chapron" in bonus_adv:
-        meilleur_score = 0
-        meilleure_ligne = None
-        meilleur_idx = None
-        for ligne, joueurs in eq_moi.items():
-            if ligne == 'GB':
-                continue
-            for idx, j in enumerate(joueurs):
-                if j['note_pred'] and j['note_pred'] > meilleur_score:
-                    meilleur_score = j['note_pred']
-                    meilleure_ligne = ligne
-                    meilleur_idx = idx
-        if meilleure_ligne is not None:
-            eq_moi[meilleure_ligne][meilleur_idx] = {
-                'nom': 'Rotaldo', 'note_pred': 2.5, 'buts': 0,
-                'clutch_7': 0, 'clutch_8': 0, 'regularite': 0, 'alerte': ''
-            }
-
-    return eq_moi, eq_adv, ann_adv, ann_moi
-
-
-def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=None, bonus_adv=None):
+def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
+                      bonus_moi=None, bonus_adv=None,
+                      domicile=True, joueur_uber=None):
     victoires = 0
     nuls = 0
     defaites = 0
@@ -231,23 +144,15 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=Non
         for j in joueurs_moi:
             note = np.random.normal(j['moyenne'], j['ecart_type'])
             note = max(0, min(10, note))
-            notes_moi[j['nom']] = {
-                'note': note,
-                'ligne': j['ligne'],
-                'buts': j['buts']
-            }
+            notes_moi[j['nom']] = {'note': note, 'ligne': j['ligne'], 'buts': j['buts']}
 
         notes_adv = {}
         for j in joueurs_adv:
             note = np.random.normal(j['moyenne'], j['ecart_type'])
             note = max(0, min(10, note))
-            notes_adv[j['nom']] = {
-                'note': note,
-                'ligne': j['ligne'],
-                'buts': j['buts']
-            }
+            notes_adv[j['nom']] = {'note': note, 'ligne': j['ligne'], 'buts': j['buts']}
 
-        # Appliquer bonus mon équipe
+        # Bonus mon équipe
         if bonus_moi == 'zahia':
             for k in notes_moi:
                 if notes_moi[k]['ligne'] != 'GB':
@@ -260,16 +165,43 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=Non
             for k in notes_adv:
                 if notes_adv[k]['ligne'] != 'GB':
                     notes_adv[k]['note'] = max(0, notes_adv[k]['note'] - 0.5)
+        elif bonus_moi == 'uber_eats' and joueur_uber:
+            nom_lower = joueur_uber.strip().lower()
+            for k in notes_moi:
+                if k.lower() == nom_lower:
+                    notes_moi[k]['note'] = min(10, notes_moi[k]['note'] + 1)
+        elif bonus_moi == 'chapron':
+            meilleur_nom = None
+            meilleur_note = -1
+            for k, v in notes_adv.items():
+                if v['ligne'] != 'GB' and v['note'] > meilleur_note:
+                    meilleur_note = v['note']
+                    meilleur_nom = k
+            if meilleur_nom:
+                notes_adv[meilleur_nom]['note'] = 2.5
 
-        # Appliquer bonus adverse
+        # Bonus adverse
         if bonus_adv == 'zahia':
             for k in notes_adv:
                 if notes_adv[k]['ligne'] != 'GB':
                     notes_adv[k]['note'] = min(10, notes_adv[k]['note'] + 1)
+        elif bonus_adv == 'suarez':
+            for k in notes_moi:
+                if notes_moi[k]['ligne'] == 'GB':
+                    notes_moi[k]['note'] = max(0, notes_moi[k]['note'] - 1)
         elif bonus_adv == 'cheat_code':
             for k in notes_moi:
                 if notes_moi[k]['ligne'] != 'GB':
                     notes_moi[k]['note'] = max(0, notes_moi[k]['note'] - 0.5)
+        elif bonus_adv == 'chapron':
+            meilleur_nom = None
+            meilleur_note = -1
+            for k, v in notes_moi.items():
+                if v['ligne'] != 'GB' and v['note'] > meilleur_note:
+                    meilleur_note = v['note']
+                    meilleur_nom = k
+            if meilleur_nom:
+                notes_moi[meilleur_nom]['note'] = 2.5
 
         # Moyennes par ligne
         def moy_ligne(notes, ligne):
@@ -288,17 +220,11 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=Non
 
         # Buts réels
         score_moi = sum(1 for v in notes_moi.values()
-                       if v['buts'] > 0 and np.random.random() < v['buts'])
+                        if v['buts'] > 0 and np.random.random() < v['buts'])
         score_adv = sum(1 for v in notes_adv.values()
-                       if v['buts'] > 0 and np.random.random() < v['buts'])
+                        if v['buts'] > 0 and np.random.random() < v['buts'])
 
-        # Valise
-        if bonus_moi == 'valise':
-            score_adv = max(0, score_adv - 1)
-        if bonus_adv == 'valise':
-            score_moi = max(0, score_moi - 1)
-
-        # Arrêt MPG gardien
+        # Arrêt MPG gardien (sur buts réels)
         if note_gb_moi >= 8:
             score_adv = max(0, score_adv - 1)
         if note_gb_adv >= 8:
@@ -320,7 +246,8 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=Non
                 continue
             but = True
             for moy, malus in lignes:
-                if note_c < moy:
+                passe = note_c >= moy if domicile else note_c > moy
+                if not passe:
                     but = False
                     break
                 note_c += malus
@@ -343,12 +270,20 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=Non
                 continue
             but = True
             for moy, malus in lignes:
-                if note_c <= moy:
+                # Adversaire est à l'extérieur si domicile=True
+                passe = note_c >= moy if not domicile else note_c > moy
+                if not passe:
                     but = False
                     break
                 note_c += malus
             if but:
                 score_adv += 1
+
+        # Valise sur score FINAL (buts réels + buts MPG)
+        if bonus_moi == 'valise':
+            score_adv = max(0, score_adv - 1)
+        if bonus_adv == 'valise':
+            score_moi = max(0, score_moi - 1)
 
         scores_moi.append(score_moi)
         scores_adv.append(score_adv)
@@ -367,6 +302,7 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500, bonus_moi=Non
         'score_moy_moi': round(np.mean(scores_moi), 1),
         'score_moy_adv': round(np.mean(scores_adv), 1),
     }
+
 
 def get_stats_joueur_mc(info_joueur, cols_journees, df):
     nom = info_joueur['nom']
