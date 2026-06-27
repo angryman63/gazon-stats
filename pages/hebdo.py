@@ -46,6 +46,17 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
     st.header("🏆 Recommandations par poste")
     colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme récente', 'Fiabilité', '% Titulaire']
 
+    with st.expander("🏥 Légende blessures"):
+        st.markdown("""
+| Emoji | Statut |
+|---|---|
+| 🚑 | Blessé — 8+ matchs manqués |
+| 🩹 | Blessé — moins de 8 matchs manqués |
+| 🏥 | Retour de blessure — 8+ matchs d'absence |
+| 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
+""")
+
+    colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
     if filtrer and mes_joueurs_input.strip():
         tab0, tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
             "⭐ Mes joueurs", "⚡ Attaquants", "🎯 Milieux Off.",
