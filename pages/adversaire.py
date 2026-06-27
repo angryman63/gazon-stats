@@ -298,111 +298,84 @@ def afficher_adversaire(df, cols_journees):
         # ============================================================
 
         st.markdown("---")
-        st.subheader("🎯 Recommandation Gazon Stats")
+st.subheader("🎯 Recommandation Gazon Stats")
 
-        if resultats_bonus:
-            st.markdown("**Impact de chaque bonus disponible :**")
-            for bonus, res in sorted(
-                resultats_bonus.items(),
-                key=lambda x: x[1]['diff'],
-                reverse=True
-            ):
-                nom_bonus = bonus.split('—')[0].strip()
-                s_m = res['score_moi']
-                s_a = res['score_adv']
-                gain = res['gain']
-                diff = res['diff']
-
-                if diff > 0:
-                    emoji = "✅"
-                    label = "Victoire"
-                elif diff == 0:
-                    emoji = "🤝"
-                    label = "Nul"
-                else:
-                    emoji = "❌"
-                    label = "Défaite"
-
-                gain_str = f"+{gain}" if gain > 0 else str(gain)
-                st.write(f"{emoji} **{nom_bonus}** → {s_m}-{s_a} {label} ({gain_str} but)")
-
-            # Meilleur bonus
-            meilleur_bonus = max(resultats_bonus.items(), key=lambda x: x[1]['diff'])
-            nom_meilleur = meilleur_bonus[0].split('—')[0].strip()
-            res_meilleur = meilleur_bonus[1]
-
-            st.markdown("---")
-
-            if diff_sb >= 1.5:
-                st.success(
-                    f"✅ **N'utilisez PAS de bonus** — Victoire confortable {score_moi}-{score_adv} "
-                    f"sans bonus. Économisez-le pour un match plus serré !"
-                )
-            elif diff_sb >= 0.5:
-                if importance_match == "🔥 Crucial":
-                    st.success(
-                        f"✅ **Utilisez {nom_meilleur}** — Match crucial, "
-                        f"passe à {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !"
-                    )
-                else:
-                    st.success(
-                        f"✅ **N'utilisez PAS de bonus** — Victoire probable {score_moi}-{score_adv}. "
-                        f"Gardez votre bonus pour un match plus serré !"
-                    )
-            elif diff_sb >= 0:
-                if res_meilleur['diff'] > 0:
-                    st.warning(
-                        f"⚠️ **Utilisez {nom_meilleur}** — Match nul prévu ({score_moi}-{score_adv}), "
-                        f"le bonus fait passer à {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !"
-                    )
-                else:
-                    st.warning(
-                        f"⚠️ **Match très serré {score_moi}-{score_adv}** — "
-                        f"Aucun de vos bonus ne change le résultat. Économisez-les !"
-                    )
-            elif diff_sb >= -1:
-                if res_meilleur['diff'] >= 0:
-                    st.warning(
-                        f"⚠️ **Utilisez {nom_meilleur}** — "
-                        f"Peut renverser {score_moi}-{score_adv} "
-                        f"en {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !"
-                    )
-                else:
-                    st.error(
-                        f"❌ **Défaite probable {score_moi}-{score_adv}** — "
-                        f"Aucun bonus ne suffit. Économisez-les !"
-                    )
-            else:
-                st.error(
-                    f"❌ **Défaite difficile {score_moi}-{score_adv}** — "
-                    f"Économisez vos bonus pour des matchs plus abordables !"
-                )
-
+if resultats_bonus:
+    st.markdown("**Impact de chaque bonus disponible :**")
+    for bonus, res in sorted(
+        resultats_bonus.items(),
+        key=lambda x: x[1]['diff'],
+        reverse=True
+    ):
+        nom_bonus = bonus.split('—')[0].strip()
+        s_m = res['score_moi']
+        s_a = res['score_adv']
+        gain = res['gain']
+        diff = res['diff']
+        if diff > 0:
+            emoji = "✅"
+            label = "Victoire"
+        elif diff == 0:
+            emoji = "🤝"
+            label = "Nul"
         else:
-            # Pas de bonus disponibles
-            if diff_sb >= 1.5:
-                st.success(f"✅ Victoire confortable {score_moi}-{score_adv} — Pas besoin de bonus !")
-            elif diff_sb >= 0.5:
-                st.success(f"✅ Victoire probable {score_moi}-{score_adv} !")
-            elif diff_sb >= 0:
-                st.warning(f"⚠️ Match très serré {score_moi}-{score_adv} !")
-            elif diff_sb >= -1:
-                st.error(f"❌ Défaite probable {score_moi}-{score_adv} !")
-            else:
-                st.error(f"❌ Défaite difficile {score_moi}-{score_adv} !")
+            emoji = "❌"
+            label = "Défaite"
+        gain_str = f"+{gain}" if gain > 0 else str(gain)
+        st.write(f"{emoji} **{nom_bonus}** → {s_m}-{s_a} {label} ({gain_str} but)")
 
-        # Alerte Miroir adverse
-        if bonus_adv_restant != "Aucun":
-            st.info(
-                f"⚠️ L'adversaire a encore "
-                f"{bonus_adv_restant.split('—')[0].strip()} — "
-                f"Vérifiez sur MPGStats !"
-            )
-        if "Miroir" in bonus_adv_restant:
-            st.warning(
-                "🪞 **L'adversaire a le Miroir !** — "
-                "Si vous utilisez un bonus, il peut le retourner contre vous !"
-            )
+    meilleur_bonus = max(resultats_bonus.items(), key=lambda x: x[1]['diff'])
+    nom_meilleur = meilleur_bonus[0].split('—')[0].strip()
+    res_meilleur = meilleur_bonus[1]
+    diff_meilleur = res_meilleur['diff']
+
+    st.markdown("---")
+
+    if diff_sb >= 2:
+        st.success(f"✅ **Gardez vos bonus** — Victoire confortable {score_moi}-{score_adv}. Aucun bonus nécessaire !")
+    elif diff_sb >= 0.5:
+        if importance_match == "🔥 Crucial":
+            st.success(f"✅ **Utilisez {nom_meilleur}** — Match crucial, sécurisez la victoire {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !")
+        else:
+            st.success(f"✅ **Gardez vos bonus** — Victoire probable {score_moi}-{score_adv}. Économisez pour un match plus serré !")
+    elif diff_sb >= 0:
+        if diff_meilleur > diff_sb:
+            st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Match très serré ({score_moi}-{score_adv}), le bonus améliore à {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !")
+        else:
+            st.warning(f"⚠️ **Match très serré {score_moi}-{score_adv}** — Aucun bonus ne change significativement le résultat")
+    elif diff_sb >= -1:
+        if diff_meilleur >= 0:
+            st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Peut renverser {score_moi}-{score_adv} en {res_meilleur['score_moi']}-{res_meilleur['score_adv']} !")
+        elif diff_meilleur > diff_sb:
+            st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Réduit la défaite de {score_moi}-{score_adv} à {res_meilleur['score_moi']}-{res_meilleur['score_adv']}")
+        else:
+            st.error(f"❌ **Défaite probable {score_moi}-{score_adv}** — Aucun bonus ne change le résultat. Économisez-les !")
+    elif diff_sb >= -2:
+        if diff_meilleur >= 0:
+            st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Peut renverser cette défaite {score_moi}-{score_adv} !")
+        else:
+            st.error(f"❌ **Défaite difficile {score_moi}-{score_adv}** — Économisez vos bonus pour un match plus abordable !")
+    else:
+        st.error(f"❌ **Défaite sévère {score_moi}-{score_adv}** — N'utilisez aucun bonus, rien n'y fera. Gardez-les pour la semaine prochaine !")
+
+else:
+    if diff_sb >= 2:
+        st.success(f"✅ Victoire confortable {score_moi}-{score_adv} — Pas besoin de bonus !")
+    elif diff_sb >= 0.5:
+        st.success(f"✅ Victoire probable {score_moi}-{score_adv} !")
+    elif diff_sb >= 0:
+        st.warning(f"⚠️ Match très serré {score_moi}-{score_adv} — Envisagez d'utiliser un bonus !")
+    elif diff_sb >= -1:
+        st.error(f"❌ Défaite probable {score_moi}-{score_adv} — Utilisez un bonus si disponible !")
+    elif diff_sb >= -2:
+        st.error(f"❌ Défaite difficile {score_moi}-{score_adv} — Bonus utile uniquement si très crucial !")
+    else:
+        st.error(f"❌ Défaite sévère {score_moi}-{score_adv} — Économisez vos bonus !")
+
+if bonus_adv_restant != "Aucun":
+    st.info(f"⚠️ L'adversaire a encore {bonus_adv_restant.split('—')[0].strip()} — Vérifiez sur MPGStats !")
+if "Miroir" in bonus_adv_restant:
+    st.warning("🪞 **L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
 
         # ============================================================
         # DÉTAILS ÉQUIPES
