@@ -594,6 +594,264 @@ with page3:
             meilleur = max(candidats_cap, key=lambda x: x[3])
             st.success(f"🎖️ Capitaine recommandé : **{meilleur[0]}** ({meilleur[1]}) — Note prédite : {meilleur[2]}")
 
+        # ============================================================
+# GESTION DES BONUS
+# ============================================================
+
+st.markdown("---")
+st.subheader("🎯 Gestion des bonus")
+
+col_bonus1, col_bonus2 = st.columns(2)
+
+liste_bonus = [
+    "Aucun",
+    "💼 Valise à Nanard — annule 1 but adverse",
+    "🪞 Miroir — retourne le bonus adverse",
+    "💃 Zahia — +1 à tous mes joueurs",
+    "🦷 Suarez — -1 au gardien adverse",
+    "👊 Tonton Pat' — annule remplacements adverses",
+    "🟥 Chapron Rouge — retire 1 joueur adverse au hasard",
+    "💻 Cheat Code — -0.5 à tous joueurs adverses",
+    "🍔 Uber Eats — +1 à un joueur choisi",
+]
+
+with col_bonus1:
+    st.markdown("**Mes bonus disponibles**")
+    mon_bonus = st.selectbox("Bonus à utiliser ce match :", liste_bonus, key="mon_bonus")
+    if mon_bonus == "🍔 Uber Eats — +1 à un joueur choisi":
+        joueur_uber = st.selectbox(
+            "Choisir le joueur :",
+            [j['nom'] for ligne in equipe_moi.values() for j in ligne if j['nom'] != 'Rotaldo'],
+            key="joueur_uber"
+        )
+    importance_match = st.radio(
+        "Importance du match :",
+        ["🔥 Crucial", "⚽ Normal", "😴 Sans enjeu"],
+        horizontal=True,
+        key="importance"
+    )
+
+with col_bonus2:
+    st.markdown("**Bonus adverses déjà utilisés**")
+    bonus_adv_utilises = st.multiselect(
+        "Cochez les bonus déjà utilisés par l'adversaire :",
+        [b for b in liste_bonus if b != "Aucun"],
+        key="bonus_adv_utilises"
+    )
+    bonus_adv_restant = st.selectbox(
+        "Bonus adverse probable ce match :",
+        liste_bonus,
+        key="bonus_adv_restant"
+    )
+
+# ============================================================
+# SIMULATION AVEC BONUS
+# ============================================================
+
+# Copie des notes pour simulation avec bonus
+import copy
+
+def appliquer_bonus(equipe_moi, equipe_adv, mon_bonus, bonus_adv, joueur_uber=None):
+    # Deep copy pour ne pas modifier les originaux
+    eq_moi_bonus = copy.deepcopy(equipe_moi)
+    eq_adv_bonus = copy.deepcopy(equipe_adv)
+
+    buts_annules_adv = 0
+    buts_annules_moi = 0
+
+    # MON BONUS
+    if "Zahia" in mon_bonus:
+        for ligne, joueurs in eq_moi_bonus.items():
+            for j in joueurs:
+                if j['note_pred'] and ligne != 'GB':
+                    j['note_pred'] = min(10, j['note_pred'] + 1)
+
+    elif "Suarez" in mon_bonus:
+        if eq_adv_bonus.get('GB') and eq_adv_bonus['GB'][0]['note_pred']:
+            eq_adv_bonus['GB'][0]['note_pred'] = max(0, eq_adv_bonus['GB'][0]['note_pred'] - 1)
+
+    elif "Cheat Code" in mon_bonus:
+        for ligne, joueurs in eq_adv_bonus.items():
+            if ligne == 'GB':
+                continue
+            for j in joueurs:
+                if j['note_pred']:
+                    j['note_pred'] = max(0, j['note_pred'] - 0.5)
+
+    elif "Valise" in mon_bonus:
+        buts_annules_adv = 1
+
+    elif "Uber Eats" in mon_bonus and joueur_uber:
+        for ligne, joueurs in eq_moi_bonus.items():
+            for j in joueurs:
+                if j['nom'] == joueur_uber and j['note_pred']:
+                    j['note_pred'] = min(10, j['note_pred'] + 1)
+
+    elif "Tonton" in mon_bonus:
+        pass  # Annule remplacements tactiques adverses — pas de simulation possible
+
+    elif "Chapron" in mon_bonus:
+        # Retire le joueur adverse avec la note la plus haute
+        meilleur_score = 0
+        meilleure_ligne = None
+        meilleur_idx = None
+        for ligne, joueurs in eq_adv_bonus.items():
+            if ligne == 'GB':
+                continue
+            for idx, j in enumerate(joueurs):
+                if j['note_pred'] and j['note_pred'] > meilleur_score:
+                    meilleur_score = j['note_pred']
+                    meilleure_ligne = ligne
+                    meilleur_idx = idx
+        if meilleure_ligne and meilleur_idx is not None:
+            eq_adv_bonus[meilleure_ligne][meilleur_idx] = {
+                'nom': 'Rotaldo', 'note_pred': 2.5, 'buts': 0,
+                'clutch_7': 0, 'clutch_8': 0, 'regularite': 0, 'alerte': ''
+            }
+
+    # BONUS ADVERSE
+    if "Zahia" in bonus_adv:
+        for ligne, joueurs in eq_adv_bonus.items():
+            if ligne != 'GB':
+                for j in joueurs:
+                    if j['note_pred']:
+                        j['note_pred'] = min(10, j['note_pred'] + 1)
+
+    elif "Suarez" in bonus_adv:
+        if eq_moi_bonus.get('GB') and eq_moi_bonus['GB'][0]['note_pred']:
+            eq_moi_bonus['GB'][0]['note_pred'] = max(0, eq_moi_bonus['GB'][0]['note_pred'] - 1)
+
+    elif "Cheat Code" in bonus_adv:
+        for ligne, joueurs in eq_moi_bonus.items():
+            if ligne == 'GB':
+                continue
+            for j in joueurs:
+                if j['note_pred']:
+                    j['note_pred'] = max(0, j['note_pred'] - 0.5)
+
+    elif "Valise" in bonus_adv:
+        buts_annules_moi = 1
+
+    elif "Chapron" in bonus_adv:
+        meilleur_score = 0
+        meilleure_ligne = None
+        meilleur_idx = None
+        for ligne, joueurs in eq_moi_bonus.items():
+            if ligne == 'GB':
+                continue
+            for idx, j in enumerate(joueurs):
+                if j['note_pred'] and j['note_pred'] > meilleur_score:
+                    meilleur_score = j['note_pred']
+                    meilleure_ligne = ligne
+                    meilleur_idx = idx
+        if meilleure_ligne and meilleur_idx is not None:
+            eq_moi_bonus[meilleure_ligne][meilleur_idx] = {
+                'nom': 'Rotaldo', 'note_pred': 2.5, 'buts': 0,
+                'clutch_7': 0, 'clutch_8': 0, 'regularite': 0, 'alerte': ''
+            }
+
+    return eq_moi_bonus, eq_adv_bonus, buts_annules_adv, buts_annules_moi
+
+# Simulation sans bonus
+buts_mpg_moi_sb = simuler_buts_mpg_info(equipe_moi, equipe_adv, domicile=True)
+buts_mpg_adv_sb = simuler_buts_mpg_info(equipe_adv, equipe_moi, domicile=False)
+score_moi_sb = buts_reels_moi + len(buts_mpg_moi_sb)
+score_adv_sb = buts_reels_adv + len(buts_mpg_adv_sb)
+
+# Simulation avec mon bonus
+joueur_uber_sel = joueur_uber if "Uber Eats" in mon_bonus else None
+eq_moi_b, eq_adv_b, ann_adv, ann_moi = appliquer_bonus(
+    equipe_moi, equipe_adv, mon_bonus, bonus_adv_restant, joueur_uber_sel
+)
+
+buts_mpg_moi_ab = simuler_buts_mpg_info(eq_moi_b, eq_adv_b, domicile=True)
+buts_mpg_adv_ab = simuler_buts_mpg_info(eq_adv_b, eq_moi_b, domicile=False)
+score_moi_ab = max(0, buts_reels_moi + len(buts_mpg_moi_ab) - ann_moi)
+score_adv_ab = max(0, buts_reels_adv + len(buts_mpg_adv_ab) - ann_adv)
+
+# Miroir
+if "Miroir" in mon_bonus and bonus_adv_restant != "Aucun":
+    eq_moi_miroir, eq_adv_miroir, ann_adv_m, ann_moi_m = appliquer_bonus(
+        equipe_moi, equipe_adv, bonus_adv_restant, "Aucun"
+    )
+    buts_mpg_moi_m = simuler_buts_mpg_info(eq_moi_miroir, eq_adv_miroir, domicile=True)
+    buts_mpg_adv_m = simuler_buts_mpg_info(eq_adv_miroir, eq_moi_miroir, domicile=False)
+    score_moi_ab = max(0, buts_reels_moi + len(buts_mpg_moi_m) - ann_moi_m)
+    score_adv_ab = max(0, buts_reels_adv + len(buts_mpg_adv_m) - ann_adv_m)
+
+# ============================================================
+# AFFICHAGE COMPARAISON ET RECOMMANDATION
+# ============================================================
+
+st.markdown("---")
+st.subheader("📊 Analyse des bonus")
+
+col_sb, col_ab = st.columns(2)
+
+with col_sb:
+    st.markdown("**Sans bonus**")
+    diff_sb = score_moi_sb - score_adv_sb
+    if diff_sb > 0:
+        st.success(f"🔵 {round(score_moi_sb,1)} - {round(score_adv_sb,1)} 🔴 — Victoire probable")
+    elif diff_sb < 0:
+        st.error(f"🔵 {round(score_moi_sb,1)} - {round(score_adv_sb,1)} 🔴 — Défaite probable")
+    else:
+        st.warning(f"🔵 {round(score_moi_sb,1)} - {round(score_adv_sb,1)} 🔴 — Match nul probable")
+
+with col_ab:
+    if mon_bonus != "Aucun":
+        st.markdown(f"**Avec {mon_bonus.split('—')[0].strip()}**")
+        diff_ab = score_moi_ab - score_adv_ab
+        if diff_ab > 0:
+            st.success(f"🔵 {round(score_moi_ab,1)} - {round(score_adv_ab,1)} 🔴 — Victoire probable")
+        elif diff_ab < 0:
+            st.error(f"🔵 {round(score_moi_ab,1)} - {round(score_adv_ab,1)} 🔴 — Défaite probable")
+        else:
+            st.warning(f"🔵 {round(score_moi_ab,1)} - {round(score_adv_ab,1)} 🔴 — Match nul probable")
+
+# ============================================================
+# RECOMMANDATION FINALE
+# ============================================================
+
+st.markdown("---")
+st.subheader("🎯 Recommandation Gazon Stats")
+
+diff_sb = score_moi_sb - score_adv_sb
+diff_ab = score_moi_ab - score_adv_ab if mon_bonus != "Aucun" else diff_sb
+gain_bonus = diff_ab - diff_sb
+
+# Logique de recommandation
+if diff_sb >= 2:
+    st.success("✅ **N'utilisez PAS de bonus ce match** — Victoire confortable sans bonus. Économisez-le pour un match plus serré !")
+elif diff_sb >= 1:
+    if importance_match == "🔥 Crucial":
+        if mon_bonus != "Aucun" and gain_bonus > 0:
+            st.success(f"✅ **Utilisez {mon_bonus.split('—')[0].strip()}** — Match crucial et bonus améliore le résultat de +{round(gain_bonus,1)} but(s)")
+        else:
+            st.info("💡 **Victoire probable sans bonus** — Match crucial : utilisez un bonus uniquement si vous avez Valise ou Zahia")
+    else:
+        st.success("✅ **N'utilisez PAS de bonus** — Victoire probable sans prendre de risque. Gardez votre bonus !")
+elif diff_sb == 0:
+    if mon_bonus != "Aucun" and gain_bonus > 0:
+        st.warning(f"⚠️ **Utilisez {mon_bonus.split('—')[0].strip()}** — Match nul prévu, le bonus peut faire la différence !")
+    else:
+        st.warning("⚠️ **Match serré** — Envisagez Zahia ou Cheat Code si disponible")
+elif diff_sb == -1:
+    if mon_bonus != "Aucun" and gain_bonus >= 1:
+        st.warning(f"⚠️ **Utilisez {mon_bonus.split('—')[0].strip()}** — Peut renverser la situation !")
+    else:
+        st.error("❌ **Situation difficile** — Utilisez votre meilleur bonus offensif")
+else:
+    st.error("❌ **Défaite probable** — Utilisez un bonus ou acceptez la défaite et économisez pour plus tard")
+
+# Alerte Miroir
+if "Miroir" not in [b for b in bonus_adv_utilises] and bonus_adv_restant != "Aucun":
+    st.info(f"🪞 **Attention** — L'adversaire a encore son bonus {bonus_adv_restant.split('—')[0].strip()} disponible !")
+
+# Alerte si adversaire a Miroir
+if any("Miroir" in b for b in [bonus_adv_restant]):
+    st.warning("🪞 **L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous. Soyez prudent !")
+        
         # Détails équipes
         st.markdown("---")
         col_eq1, col_eq2 = st.columns(2)
