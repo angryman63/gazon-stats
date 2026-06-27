@@ -50,21 +50,30 @@ def afficher_adversaire(df, cols_journees):
 
     st.header("⚔️ Analyser mon adversaire")
 
-    # Stratégie
+    # ============================================================
+    # STRATÉGIE ET MODE
+    # ============================================================
+
     st.subheader("🎯 Votre stratégie")
     strategie_jeu = st.radio(
         "Choisissez votre stratégie :",
         ["🗡️ Offensive", "⚖️ Équilibrée", "🛡️ Défensive"],
-        horizontal=True
+        horizontal=True,
+        key="strategie_jeu"
     )
 
     mode_analyse = st.radio(
         "Mode d'analyse :",
         ["🔮 Analyse préventive (avant match)", "🎯 Analyse précise (compo connue)"],
-        horizontal=True
+        horizontal=True,
+        key="mode_analyse"
     )
 
     st.markdown("---")
+
+    # ============================================================
+    # SAISIE DES ÉQUIPES
+    # ============================================================
 
     col1, col2 = st.columns(2)
 
@@ -108,9 +117,54 @@ def afficher_adversaire(df, cols_journees):
 
     st.markdown("---")
 
+    # ============================================================
+    # BONUS — AVANT LE BOUTON
+    # ============================================================
+
+    st.subheader("🎯 Gestion des bonus")
+    col_b1, col_b2 = st.columns(2)
+
+    with col_b1:
+        st.markdown("**Mes bonus disponibles**")
+        mon_bonus = st.selectbox(
+            "Bonus à utiliser ce match :",
+            liste_bonus,
+            key="mon_bonus"
+        )
+        joueur_uber = None
+        if "Uber Eats" in mon_bonus:
+            joueur_uber = st.text_input(
+                "Nom du joueur boosté :",
+                key="joueur_uber"
+            )
+        importance_match = st.radio(
+            "Importance du match :",
+            ["🔥 Crucial", "⚽ Normal", "😴 Sans enjeu"],
+            horizontal=True,
+            key="importance"
+        )
+
+    with col_b2:
+        st.markdown("**Bonus adverses**")
+        bonus_adv_utilises = st.multiselect(
+            "Bonus déjà utilisés par l'adversaire :",
+            [b for b in liste_bonus if b != "Aucun"],
+            key="bonus_adv_utilises"
+        )
+        bonus_adv_restant = st.selectbox(
+            "Bonus adverse probable ce match :",
+            liste_bonus,
+            key="bonus_adv_restant"
+        )
+
+    st.markdown("---")
+
+    # ============================================================
+    # BOUTON SIMULATION
+    # ============================================================
+
     if st.button("🚀 Lancer la simulation", type="primary"):
 
-        # Construire équipe depuis noms
         def construire_equipe_noms(noms_titu, noms_rempl):
             titu_info = []
             rempl_info = []
@@ -139,9 +193,14 @@ def afficher_adversaire(df, cols_journees):
                 ligne = poste_vers_ligne(j['poste'])
                 equipe_adv[ligne].append(j)
         else:
-            equipe_adv, _ = meilleure_compo(adv_joueurs, df, cols_journees, strategie_jeu)
+            equipe_adv, _ = meilleure_compo(
+                adv_joueurs, df, cols_journees, strategie_jeu
+            )
 
-        # Simulation de base
+        # ============================================================
+        # SIMULATION DE BASE
+        # ============================================================
+
         buts_mpg_moi = simuler_buts_mpg(equipe_moi, equipe_adv, domicile=True)
         buts_mpg_adv = simuler_buts_mpg(equipe_adv, equipe_moi, domicile=False)
 
@@ -149,9 +208,11 @@ def afficher_adversaire(df, cols_journees):
         buts_reels_adv = sum(j['buts'] for ligne in equipe_adv.values() for j in ligne)
 
         arret_moi = (equipe_moi.get('GB') and
+                     equipe_moi['GB'] and
                      equipe_moi['GB'][0]['note_pred'] and
                      equipe_moi['GB'][0]['note_pred'] >= 8)
         arret_adv = (equipe_adv.get('GB') and
+                     equipe_adv['GB'] and
                      equipe_adv['GB'][0]['note_pred'] and
                      equipe_adv['GB'][0]['note_pred'] >= 8)
 
@@ -160,15 +221,18 @@ def afficher_adversaire(df, cols_journees):
         if arret_adv:
             buts_reels_moi = max(0, buts_reels_moi - 1)
 
-        score_moi = buts_reels_moi + len(buts_mpg_moi)
-        score_adv = buts_reels_adv + len(buts_mpg_adv)
+        score_moi = round(buts_reels_moi + len(buts_mpg_moi), 1)
+        score_adv = round(buts_reels_adv + len(buts_mpg_adv), 1)
 
-        # Affichage résultat
+        # ============================================================
+        # RÉSULTAT SIMULÉ
+        # ============================================================
+
         st.subheader("📊 Résultat simulé")
         col_s1, col_s2, col_s3 = st.columns([2, 1, 2])
 
         with col_s1:
-            st.metric("🔵 Mon équipe", f"{round(score_moi, 1)} buts")
+            st.metric("🔵 Mon équipe", f"{score_moi} buts")
             if buts_mpg_moi:
                 st.success(f"⚽ Buts MPG : {', '.join(buts_mpg_moi)}")
             if arret_moi:
@@ -184,7 +248,7 @@ def afficher_adversaire(df, cols_journees):
                 st.markdown("### 🤝 Nul")
 
         with col_s3:
-            st.metric("🔴 Adversaire", f"{round(score_adv, 1)} buts")
+            st.metric("🔴 Adversaire", f"{score_adv} buts")
             if buts_mpg_adv:
                 st.error(f"⚽ Buts MPG adverses : {', '.join(buts_mpg_adv)}")
             if arret_adv:
@@ -192,7 +256,10 @@ def afficher_adversaire(df, cols_journees):
 
         st.markdown("---")
 
-        # Recommandation capitaine
+        # ============================================================
+        # RECOMMANDATION CAPITAINE
+        # ============================================================
+
         st.subheader("🎖️ Recommandation capitaine")
         candidats_cap = []
         for ligne, joueurs in equipe_moi.items():
@@ -208,9 +275,9 @@ def afficher_adversaire(df, cols_journees):
                         score_cap = (j['note_pred']/10)*0.5 + j['regularite']*0.3 + j['clutch_7']*0.2
                     candidats_cap.append((j['nom'], j['poste'], j['note_pred'], score_cap))
 
-        if equipe_moi.get('GB') and equipe_moi['GB'][0]['clutch_8'] >= 0.10:
+        if equipe_moi.get('GB') and equipe_moi['GB']:
             gb = equipe_moi['GB'][0]
-            if strategie_jeu == "🛡️ Défensive":
+            if gb['clutch_8'] >= 0.10 and strategie_jeu == "🛡️ Défensive":
                 candidats_cap.append((gb['nom'], 'G', gb['note_pred'], 999))
 
         if candidats_cap:
@@ -220,129 +287,127 @@ def afficher_adversaire(df, cols_journees):
         st.markdown("---")
 
         # ============================================================
-        # GESTION DES BONUS
+        # SIMULATION AVEC BONUS
         # ============================================================
 
-        st.subheader("🎯 Gestion des bonus")
-
-        col_b1, col_b2 = st.columns(2)
-
-        with col_b1:
-            st.markdown("**Mes bonus disponibles**")
-            mon_bonus = st.selectbox(
-                "Bonus à utiliser ce match :",
-                liste_bonus,
-                key="mon_bonus"
-            )
-            joueur_uber = None
-            if "Uber Eats" in mon_bonus:
-                joueur_uber = st.selectbox(
-                    "Choisir le joueur :",
-                    [j['nom'] for ligne in equipe_moi.values()
-                     for j in ligne if j['nom'] != 'Rotaldo'],
-                    key="joueur_uber"
-                )
-            importance_match = st.radio(
-                "Importance du match :",
-                ["🔥 Crucial", "⚽ Normal", "😴 Sans enjeu"],
-                horizontal=True,
-                key="importance"
-            )
-
-        with col_b2:
-            st.markdown("**Bonus adverses**")
-            bonus_adv_utilises = st.multiselect(
-                "Bonus déjà utilisés par l'adversaire :",
-                [b for b in liste_bonus if b != "Aucun"],
-                key="bonus_adv_utilises"
-            )
-            bonus_adv_restant = st.selectbox(
-                "Bonus adverse probable ce match :",
-                liste_bonus,
-                key="bonus_adv_restant"
-            )
-
-        # Simulation sans bonus
-        score_moi_sb = score_moi
-        score_adv_sb = score_adv
-
-        # Simulation avec mon bonus
         eq_moi_b, eq_adv_b, ann_adv, ann_moi = appliquer_bonus(
             equipe_moi, equipe_adv, mon_bonus, bonus_adv_restant, joueur_uber
         )
         buts_mpg_moi_ab = simuler_buts_mpg(eq_moi_b, eq_adv_b, domicile=True)
         buts_mpg_adv_ab = simuler_buts_mpg(eq_adv_b, eq_moi_b, domicile=False)
-        score_moi_ab = max(0, buts_reels_moi + len(buts_mpg_moi_ab) - ann_moi)
-        score_adv_ab = max(0, buts_reels_adv + len(buts_mpg_adv_ab) - ann_adv)
+        score_moi_ab = round(max(0, buts_reels_moi + len(buts_mpg_moi_ab) - ann_moi), 1)
+        score_adv_ab = round(max(0, buts_reels_adv + len(buts_mpg_adv_ab) - ann_adv), 1)
 
-        st.markdown("---")
+        # ============================================================
+        # ANALYSE DES BONUS
+        # ============================================================
+
         st.subheader("📊 Analyse des bonus")
-
         col_sb, col_ab = st.columns(2)
 
         with col_sb:
             st.markdown("**Sans bonus**")
-            diff_sb = score_moi_sb - score_adv_sb
+            diff_sb = score_moi - score_adv
             if diff_sb > 0:
-                st.success(f"🔵 {round(score_moi_sb,1)} - {round(score_adv_sb,1)} 🔴 — Victoire")
+                st.success(f"🔵 {score_moi} - {score_adv} 🔴 — Victoire")
             elif diff_sb < 0:
-                st.error(f"🔵 {round(score_moi_sb,1)} - {round(score_adv_sb,1)} 🔴 — Défaite")
+                st.error(f"🔵 {score_moi} - {score_adv} 🔴 — Défaite")
             else:
-                st.warning(f"🔵 {round(score_moi_sb,1)} - {round(score_adv_sb,1)} 🔴 — Nul")
+                st.warning(f"🔵 {score_moi} - {score_adv} 🔴 — Nul")
 
         with col_ab:
             if mon_bonus != "Aucun":
                 st.markdown(f"**Avec {mon_bonus.split('—')[0].strip()}**")
                 diff_ab = score_moi_ab - score_adv_ab
                 if diff_ab > 0:
-                    st.success(f"🔵 {round(score_moi_ab,1)} - {round(score_adv_ab,1)} 🔴 — Victoire")
+                    st.success(f"🔵 {score_moi_ab} - {score_adv_ab} 🔴 — Victoire")
                 elif diff_ab < 0:
-                    st.error(f"🔵 {round(score_moi_ab,1)} - {round(score_adv_ab,1)} 🔴 — Défaite")
+                    st.error(f"🔵 {score_moi_ab} - {score_adv_ab} 🔴 — Défaite")
                 else:
-                    st.warning(f"🔵 {round(score_moi_ab,1)} - {round(score_adv_ab,1)} 🔴 — Nul")
+                    st.warning(f"🔵 {score_moi_ab} - {score_adv_ab} 🔴 — Nul")
 
-        # Recommandation finale
+        # ============================================================
+        # RECOMMANDATION FINALE
+        # ============================================================
+
         st.markdown("---")
         st.subheader("🎯 Recommandation Gazon Stats")
 
-        diff_sb = score_moi_sb - score_adv_sb
-        diff_ab = score_moi_ab - score_adv_ab if mon_bonus != "Aucun" else diff_sb
-        gain_bonus = diff_ab - diff_sb
+        diff_sb = round(score_moi - score_adv, 1)
+        diff_ab = round(score_moi_ab - score_adv_ab, 1) if mon_bonus != "Aucun" else diff_sb
+        gain_bonus = round(diff_ab - diff_sb, 1)
 
-        if diff_sb >= 2:
-            st.success("✅ **N'utilisez PAS de bonus** — Victoire confortable. Économisez-le !")
-        elif diff_sb >= 1:
+        if diff_sb >= 1.5:
+            st.success(
+                f"✅ **N'utilisez PAS de bonus** — Vous gagnez {score_moi}-{score_adv} "
+                f"confortablement. Économisez votre bonus pour un match plus serré !"
+            )
+        elif diff_sb >= 0.5:
             if importance_match == "🔥 Crucial":
                 if mon_bonus != "Aucun" and gain_bonus > 0:
-                    st.success(f"✅ **Utilisez {mon_bonus.split('—')[0].strip()}** — Match crucial !")
+                    st.success(
+                        f"✅ **Utilisez {mon_bonus.split('—')[0].strip()}** — Match crucial ! "
+                        f"Passe de {score_moi}-{score_adv} à {score_moi_ab}-{score_adv_ab} ✅"
+                    )
                 else:
-                    st.info("💡 **Victoire probable** — Bonus non indispensable")
+                    st.success(
+                        f"✅ **N'utilisez PAS de bonus** — Victoire probable {score_moi}-{score_adv}. "
+                        f"Gardez votre bonus !"
+                    )
             else:
-                st.success("✅ **N'utilisez PAS de bonus** — Gardez-le pour un match serré !")
-        elif diff_sb == 0:
-            if mon_bonus != "Aucun" and gain_bonus > 0:
-                st.warning(f"⚠️ **Utilisez {mon_bonus.split('—')[0].strip()}** — Peut faire la différence !")
+                st.success(
+                    f"✅ **N'utilisez PAS de bonus** — Victoire probable {score_moi}-{score_adv}. "
+                    f"Gardez votre bonus pour un match plus serré !"
+                )
+        elif diff_sb >= 0:
+            if mon_bonus != "Aucun" and gain_bonus >= 0.5:
+                st.warning(
+                    f"⚠️ **Utilisez {mon_bonus.split('—')[0].strip()}** — Match nul prévu "
+                    f"({score_moi}-{score_adv}), le bonus fait passer à {score_moi_ab}-{score_adv_ab} !"
+                )
             else:
-                st.warning("⚠️ **Match serré** — Envisagez Zahia ou Cheat Code")
-        elif diff_sb == -1:
+                st.warning(
+                    f"⚠️ **Match très serré {score_moi}-{score_adv}** — "
+                    f"Envisagez Zahia ou Cheat Code si disponible"
+                )
+        elif diff_sb >= -1:
             if mon_bonus != "Aucun" and gain_bonus >= 1:
-                st.warning(f"⚠️ **Utilisez {mon_bonus.split('—')[0].strip()}** — Peut renverser la situation !")
+                st.warning(
+                    f"⚠️ **Utilisez {mon_bonus.split('—')[0].strip()}** — "
+                    f"Peut renverser {score_moi}-{score_adv} en {score_moi_ab}-{score_adv_ab} !"
+                )
             else:
-                st.error("❌ **Défaite probable** — Utilisez votre meilleur bonus offensif")
+                st.error(
+                    f"❌ **Défaite probable {score_moi}-{score_adv}** — "
+                    f"Utilisez votre meilleur bonus offensif"
+                )
         else:
-            st.error("❌ **Défaite probable** — Utilisez un bonus ou économisez pour plus tard")
+            st.error(
+                f"❌ **Défaite difficile {score_moi}-{score_adv}** — "
+                f"Économisez votre bonus pour un match plus abordable"
+            )
 
         if bonus_adv_restant != "Aucun":
-            st.info(f"🪞 **Attention** — L'adversaire a encore {bonus_adv_restant.split('—')[0].strip()} disponible !")
-        if any("Miroir" in b for b in [bonus_adv_restant]):
-            st.warning("🪞 **L'adversaire a le Miroir !** — Prudence si vous utilisez un bonus !")
+            st.info(
+                f"⚠️ **Attention** — L'adversaire a encore "
+                f"{bonus_adv_restant.split('—')[0].strip()} disponible ! "
+                f"Vérifiez sur MPGStats."
+            )
+        if "Miroir" in bonus_adv_restant:
+            st.warning(
+                "🪞 **L'adversaire a le Miroir !** — "
+                "Si vous utilisez un bonus, il peut le retourner contre vous !"
+            )
 
-        # Détails équipes
+        # ============================================================
+        # DÉTAILS ÉQUIPES
+        # ============================================================
+
         st.markdown("---")
         col_eq1, col_eq2 = st.columns(2)
 
         with col_eq1:
-            st.subheader("🔵 Mon équipe")
+            st.subheader("🔵 Mon équipe — Détails")
             for ligne in ['GB', 'DEF', 'MIL', 'ATT']:
                 for j in equipe_moi.get(ligne, []):
                     note = f"{j['note_pred']:.2f}" if j['note_pred'] else "?"
@@ -351,7 +416,7 @@ def afficher_adversaire(df, cols_journees):
                     st.write(f"**{ligne}** | {j['nom']} — {note}{clutch}{alerte}")
 
         with col_eq2:
-            st.subheader("🔴 Équipe adverse")
+            st.subheader("🔴 Équipe adverse — Détails")
             for ligne in ['GB', 'DEF', 'MIL', 'ATT']:
                 for j in equipe_adv.get(ligne, []):
                     note = f"{j['note_pred']:.2f}" if j['note_pred'] else "?"
