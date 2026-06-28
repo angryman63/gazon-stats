@@ -6,7 +6,6 @@ from modele import nettoyer_note, calculer_clutch, predire_note, alerte_blessure
 # ─── Identité visuelle Maestro Tactico ───────────────────────────────────────
 MT_CSS = """
 <style>
-/* ── Palette ── */
 :root {
     --mt-bg:        #0d0d0d;
     --mt-card:      #1a1a1a;
@@ -16,7 +15,6 @@ MT_CSS = """
     --mt-gris:      #555555;
 }
 
-/* ── Base ── */
 [data-testid="stAppViewContainer"] {
     background-color: var(--mt-bg) !important;
 }
@@ -27,17 +25,9 @@ section[data-testid="stSidebar"] {
     background-color: #141414 !important;
 }
 
-/* ── Header h1/h2/h3 ── */
 h1, h2, h3 {
     color: var(--mt-blanc) !important;
     letter-spacing: 0.05em;
-}
-
-/* ── Section separator  (filet fin + titre or centré) ── */
-hr {
-    border: none;
-    border-top: 1px solid var(--mt-or) !important;
-    margin: 1.5rem 0;
 }
 
 /* ── Tabs ── */
@@ -63,68 +53,88 @@ hr {
     color: var(--mt-or) !important;
 }
 
-/* ── Dataframe ── */
-[data-testid="stDataFrame"] {
+/* ── Dataframe — dark mode complet ── */
+[data-testid="stDataFrame"] > div {
+    background-color: #1a1a1a !important;
     border-radius: 8px;
-    overflow: hidden;
     border-left: 3px solid;
-    border-image: linear-gradient(to bottom, var(--mt-or), var(--mt-or-fonce)) 1;
+    border-image: linear-gradient(to bottom, #c8a84b, #8a6f2e) 1;
+}
+[data-testid="stDataFrame"] iframe {
+    background-color: #1a1a1a !important;
+}
+[data-testid="stDataFrame"] [class*="dvn-scroller"] {
+    background-color: #1a1a1a !important;
 }
 [data-testid="stDataFrame"] table {
-    background-color: var(--mt-card) !important;
-    color: var(--mt-blanc) !important;
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-collapse: collapse;
+    width: 100%;
 }
 [data-testid="stDataFrame"] thead tr th {
     background-color: #0d0d0d !important;
-    color: var(--mt-or) !important;
+    color: #c8a84b !important;
     font-weight: 700;
     letter-spacing: 0.04em;
-    border-bottom: 1px solid var(--mt-or) !important;
+    border-bottom: 1px solid #c8a84b !important;
+    padding: 8px 12px;
+}
+[data-testid="stDataFrame"] tbody tr td {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #333333 !important;
+    padding: 6px 12px;
+}
+[data-testid="stDataFrame"] tbody tr:nth-child(even) td {
+    background-color: #222222 !important;
 }
 [data-testid="stDataFrame"] tbody tr:hover td {
-    background-color: #222222 !important;
+    background-color: #2a2a2a !important;
+}
+
+/* ── Expander ── */
+[data-testid="stExpander"] {
+    background-color: #1a1a1a !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 8px !important;
+    border-left: 3px solid #c8a84b !important;
+}
+[data-testid="stExpander"] summary {
+    color: #c8a84b !important;
+    font-weight: 600;
+}
+[data-testid="stExpander"] table {
+    background-color: transparent !important;
+    color: #ffffff !important;
+}
+[data-testid="stExpander"] table thead th {
+    color: #c8a84b !important;
+    border-bottom: 1px solid #c8a84b !important;
 }
 
 /* ── Warning / Info ── */
 [data-testid="stWarning"], [data-testid="stInfo"] {
-    background-color: var(--mt-card) !important;
-    border-left: 3px solid var(--mt-or) !important;
-    color: var(--mt-blanc) !important;
+    background-color: #1a1a1a !important;
+    border-left: 3px solid #c8a84b !important;
+    color: #ffffff !important;
     border-radius: 0 6px 6px 0;
 }
 
-/* ── Expander (légende blessures) ── */
-[data-testid="stExpander"] {
-    background-color: var(--mt-card) !important;
-    border: 1px solid #2a2a2a !important;
-    border-radius: 8px !important;
-    border-left: 3px solid var(--mt-or) !important;
-}
-[data-testid="stExpander"] summary {
-    color: var(--mt-or) !important;
-    font-weight: 600;
+hr {
+    border: none;
+    border-top: 1px solid #2a2a2a !important;
+    margin: 1.5rem 0;
 }
 
-/* ── Table interne (légende) ── */
-[data-testid="stExpander"] table {
-    background-color: transparent !important;
-    color: var(--mt-blanc) !important;
-}
-[data-testid="stExpander"] table thead th {
-    color: var(--mt-or) !important;
-    border-bottom: 1px solid var(--mt-or) !important;
-}
-
-/* ── Texte général ── */
 p, li, span, label {
-    color: var(--mt-blanc) !important;
+    color: #ffffff !important;
 }
 </style>
 """
 
 def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
 
-    # Injection CSS identité visuelle
     st.markdown(MT_CSS, unsafe_allow_html=True)
 
     scores = []
@@ -165,7 +175,6 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
-    # ── Titre section avec séparateur or ─────────────────────────────────────
     st.markdown("""
     <div style="display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem;">
         <div style="flex:1;height:1px;background:linear-gradient(to right,#c8a84b,transparent);"></div>
