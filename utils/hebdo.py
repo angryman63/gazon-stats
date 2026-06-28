@@ -3,7 +3,129 @@ import pandas as pd
 import numpy as np
 from modele import nettoyer_note, calculer_clutch, predire_note, alerte_blessure, etiquette_regularite, absences_consecutives
 
+# ─── Identité visuelle Maestro Tactico ───────────────────────────────────────
+MT_CSS = """
+<style>
+/* ── Palette ── */
+:root {
+    --mt-bg:        #0d0d0d;
+    --mt-card:      #1a1a1a;
+    --mt-or:        #c8a84b;
+    --mt-or-fonce:  #8a6f2e;
+    --mt-blanc:     #ffffff;
+    --mt-gris:      #555555;
+}
+
+/* ── Base ── */
+[data-testid="stAppViewContainer"] {
+    background-color: var(--mt-bg) !important;
+}
+[data-testid="stHeader"] {
+    background-color: #0d0d0d !important;
+}
+section[data-testid="stSidebar"] {
+    background-color: #141414 !important;
+}
+
+/* ── Header h1/h2/h3 ── */
+h1, h2, h3 {
+    color: var(--mt-blanc) !important;
+    letter-spacing: 0.05em;
+}
+
+/* ── Section separator  (filet fin + titre or centré) ── */
+hr {
+    border: none;
+    border-top: 1px solid var(--mt-or) !important;
+    margin: 1.5rem 0;
+}
+
+/* ── Tabs ── */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background-color: #141414;
+    border-bottom: 1px solid #2a2a2a;
+    gap: 4px;
+}
+[data-testid="stTabs"] [data-baseweb="tab"] {
+    color: var(--mt-gris) !important;
+    background-color: transparent !important;
+    border-radius: 4px 4px 0 0;
+    padding: 8px 16px;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+[data-testid="stTabs"] [aria-selected="true"] {
+    color: var(--mt-or) !important;
+    border-bottom: 2px solid var(--mt-or) !important;
+    background-color: transparent !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab"]:hover {
+    color: var(--mt-or) !important;
+}
+
+/* ── Dataframe ── */
+[data-testid="stDataFrame"] {
+    border-radius: 8px;
+    overflow: hidden;
+    border-left: 3px solid;
+    border-image: linear-gradient(to bottom, var(--mt-or), var(--mt-or-fonce)) 1;
+}
+[data-testid="stDataFrame"] table {
+    background-color: var(--mt-card) !important;
+    color: var(--mt-blanc) !important;
+}
+[data-testid="stDataFrame"] thead tr th {
+    background-color: #0d0d0d !important;
+    color: var(--mt-or) !important;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--mt-or) !important;
+}
+[data-testid="stDataFrame"] tbody tr:hover td {
+    background-color: #222222 !important;
+}
+
+/* ── Warning / Info ── */
+[data-testid="stWarning"], [data-testid="stInfo"] {
+    background-color: var(--mt-card) !important;
+    border-left: 3px solid var(--mt-or) !important;
+    color: var(--mt-blanc) !important;
+    border-radius: 0 6px 6px 0;
+}
+
+/* ── Expander (légende blessures) ── */
+[data-testid="stExpander"] {
+    background-color: var(--mt-card) !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 8px !important;
+    border-left: 3px solid var(--mt-or) !important;
+}
+[data-testid="stExpander"] summary {
+    color: var(--mt-or) !important;
+    font-weight: 600;
+}
+
+/* ── Table interne (légende) ── */
+[data-testid="stExpander"] table {
+    background-color: transparent !important;
+    color: var(--mt-blanc) !important;
+}
+[data-testid="stExpander"] table thead th {
+    color: var(--mt-or) !important;
+    border-bottom: 1px solid var(--mt-or) !important;
+}
+
+/* ── Texte général ── */
+p, li, span, label {
+    color: var(--mt-blanc) !important;
+}
+</style>
+"""
+
 def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
+
+    # Injection CSS identité visuelle
+    st.markdown(MT_CSS, unsafe_allow_html=True)
 
     scores = []
     for idx, row in df.iterrows():
@@ -43,7 +165,16 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
-    st.header("🏆 Recommandations par poste")
+    # ── Titre section avec séparateur or ─────────────────────────────────────
+    st.markdown("""
+    <div style="display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem;">
+        <div style="flex:1;height:1px;background:linear-gradient(to right,#c8a84b,transparent);"></div>
+        <span style="color:#c8a84b;font-weight:700;letter-spacing:0.12em;font-size:0.85rem;white-space:nowrap;">
+            🏆 RECOMMANDATIONS PAR POSTE
+        </span>
+        <div style="flex:1;height:1px;background:linear-gradient(to left,#c8a84b,transparent);"></div>
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
