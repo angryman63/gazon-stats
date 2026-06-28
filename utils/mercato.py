@@ -30,12 +30,12 @@ h1, h2, h3 {
     letter-spacing: 0.05em;
 }
 
-/* ── Radio (stratégie) ── */
+/* ── Radio ── */
 [data-testid="stRadio"] label {
-    color: var(--mt-blanc) !important;
+    color: #ffffff !important;
 }
 [data-testid="stRadio"] [data-baseweb="radio"] div {
-    border-color: var(--mt-or) !important;
+    border-color: #c8a84b !important;
 }
 
 /* ── Tabs ── */
@@ -45,7 +45,7 @@ h1, h2, h3 {
     gap: 4px;
 }
 [data-testid="stTabs"] [data-baseweb="tab"] {
-    color: var(--mt-gris) !important;
+    color: #555555 !important;
     background-color: transparent !important;
     border-radius: 4px 4px 0 0;
     padding: 8px 16px;
@@ -53,61 +53,79 @@ h1, h2, h3 {
     transition: color 0.2s;
 }
 [data-testid="stTabs"] [aria-selected="true"] {
-    color: var(--mt-or) !important;
-    border-bottom: 2px solid var(--mt-or) !important;
+    color: #c8a84b !important;
+    border-bottom: 2px solid #c8a84b !important;
     background-color: transparent !important;
 }
 [data-testid="stTabs"] [data-baseweb="tab"]:hover {
-    color: var(--mt-or) !important;
+    color: #c8a84b !important;
 }
 
-/* ── Dataframe ── */
-[data-testid="stDataFrame"] {
+/* ── Dataframe — dark mode complet ── */
+[data-testid="stDataFrame"] > div {
+    background-color: #1a1a1a !important;
     border-radius: 8px;
-    overflow: hidden;
     border-left: 3px solid;
-    border-image: linear-gradient(to bottom, var(--mt-or), var(--mt-or-fonce)) 1;
+    border-image: linear-gradient(to bottom, #c8a84b, #8a6f2e) 1;
+}
+[data-testid="stDataFrame"] iframe {
+    background-color: #1a1a1a !important;
+}
+[data-testid="stDataFrame"] [class*="dvn-scroller"] {
+    background-color: #1a1a1a !important;
 }
 [data-testid="stDataFrame"] table {
-    background-color: var(--mt-card) !important;
-    color: var(--mt-blanc) !important;
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-collapse: collapse;
+    width: 100%;
 }
 [data-testid="stDataFrame"] thead tr th {
     background-color: #0d0d0d !important;
-    color: var(--mt-or) !important;
+    color: #c8a84b !important;
     font-weight: 700;
     letter-spacing: 0.04em;
-    border-bottom: 1px solid var(--mt-or) !important;
+    border-bottom: 1px solid #c8a84b !important;
+    padding: 8px 12px;
+}
+[data-testid="stDataFrame"] tbody tr td {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #333333 !important;
+    padding: 6px 12px;
+}
+[data-testid="stDataFrame"] tbody tr:nth-child(even) td {
+    background-color: #222222 !important;
 }
 [data-testid="stDataFrame"] tbody tr:hover td {
-    background-color: #222222 !important;
+    background-color: #2a2a2a !important;
 }
 
 /* ── Expander ── */
 [data-testid="stExpander"] {
-    background-color: var(--mt-card) !important;
+    background-color: #1a1a1a !important;
     border: 1px solid #2a2a2a !important;
     border-radius: 8px !important;
-    border-left: 3px solid var(--mt-or) !important;
+    border-left: 3px solid #c8a84b !important;
 }
 [data-testid="stExpander"] summary {
-    color: var(--mt-or) !important;
+    color: #c8a84b !important;
     font-weight: 600;
 }
 [data-testid="stExpander"] table {
     background-color: transparent !important;
-    color: var(--mt-blanc) !important;
+    color: #ffffff !important;
 }
 [data-testid="stExpander"] table thead th {
-    color: var(--mt-or) !important;
-    border-bottom: 1px solid var(--mt-or) !important;
+    color: #c8a84b !important;
+    border-bottom: 1px solid #c8a84b !important;
 }
 
 /* ── Info / Warning ── */
 [data-testid="stWarning"], [data-testid="stInfo"] {
-    background-color: var(--mt-card) !important;
-    border-left: 3px solid var(--mt-or) !important;
-    color: var(--mt-blanc) !important;
+    background-color: #1a1a1a !important;
+    border-left: 3px solid #c8a84b !important;
+    color: #ffffff !important;
     border-radius: 0 6px 6px 0;
 }
 
@@ -118,10 +136,10 @@ hr {
 }
 
 p, li, span, label {
-    color: var(--mt-blanc) !important;
+    color: #ffffff !important;
 }
 strong {
-    color: var(--mt-or) !important;
+    color: #c8a84b !important;
 }
 </style>
 """
