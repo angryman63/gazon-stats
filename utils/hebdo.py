@@ -3,132 +3,34 @@ import pandas as pd
 import numpy as np
 from modele import nettoyer_note, calculer_clutch, predire_note, alerte_blessure, etiquette_regularite, absences_consecutives
 
-# ─── Identité visuelle Maestro Tactico ───────────────────────────────────────
+# ─── Identité visuelle Maestro Tactico (sans règles dataframe) ───────────────
 MT_CSS = """
 <style>
-:root {
-    --mt-bg:        #0d0d0d;
-    --mt-card:      #1a1a1a;
-    --mt-or:        #c8a84b;
-    --mt-or-fonce:  #8a6f2e;
-    --mt-blanc:     #ffffff;
-    --mt-gris:      #555555;
-}
-
-[data-testid="stAppViewContainer"] {
-    background-color: var(--mt-bg) !important;
-}
-[data-testid="stHeader"] {
-    background-color: #0d0d0d !important;
-}
-section[data-testid="stSidebar"] {
-    background-color: #141414 !important;
-}
-
-h1, h2, h3 {
-    color: var(--mt-blanc) !important;
-    letter-spacing: 0.05em;
-}
-
-/* ── Tabs ── */
 [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    background-color: #141414;
     border-bottom: 1px solid #2a2a2a;
     gap: 4px;
 }
 [data-testid="stTabs"] [data-baseweb="tab"] {
-    color: var(--mt-gris) !important;
+    color: #555555 !important;
     background-color: transparent !important;
     border-radius: 4px 4px 0 0;
     padding: 8px 16px;
     font-weight: 600;
-    transition: color 0.2s;
 }
 [data-testid="stTabs"] [aria-selected="true"] {
-    color: var(--mt-or) !important;
-    border-bottom: 2px solid var(--mt-or) !important;
+    color: #c8a84b !important;
+    border-bottom: 2px solid #c8a84b !important;
     background-color: transparent !important;
 }
 [data-testid="stTabs"] [data-baseweb="tab"]:hover {
-    color: var(--mt-or) !important;
-}
-
-/* ── Dataframe — dark mode complet ── */
-[data-testid="stDataFrame"] > div {
-    background-color: #1a1a1a !important;
-    border-radius: 8px;
-    border-left: 3px solid;
-    border-image: linear-gradient(to bottom, #c8a84b, #8a6f2e) 1;
-}
-[data-testid="stDataFrame"] iframe {
-    background-color: #1a1a1a !important;
-}
-[data-testid="stDataFrame"] [class*="dvn-scroller"] {
-    background-color: #1a1a1a !important;
-}
-[data-testid="stDataFrame"] table {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
-    border-collapse: collapse;
-    width: 100%;
-}
-[data-testid="stDataFrame"] thead tr th {
-    background-color: #0d0d0d !important;
     color: #c8a84b !important;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    border-bottom: 1px solid #c8a84b !important;
-    padding: 8px 12px;
 }
-[data-testid="stDataFrame"] tbody tr td {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
-    border-bottom: 1px solid #333333 !important;
-    padding: 6px 12px;
-}
-[data-testid="stDataFrame"] tbody tr:nth-child(even) td {
-    background-color: #222222 !important;
-}
-[data-testid="stDataFrame"] tbody tr:hover td {
-    background-color: #2a2a2a !important;
-}
-
-/* ── Expander ── */
 [data-testid="stExpander"] {
-    background-color: #1a1a1a !important;
-    border: 1px solid #2a2a2a !important;
-    border-radius: 8px !important;
     border-left: 3px solid #c8a84b !important;
 }
 [data-testid="stExpander"] summary {
     color: #c8a84b !important;
     font-weight: 600;
-}
-[data-testid="stExpander"] table {
-    background-color: transparent !important;
-    color: #ffffff !important;
-}
-[data-testid="stExpander"] table thead th {
-    color: #c8a84b !important;
-    border-bottom: 1px solid #c8a84b !important;
-}
-
-/* ── Warning / Info ── */
-[data-testid="stWarning"], [data-testid="stInfo"] {
-    background-color: #1a1a1a !important;
-    border-left: 3px solid #c8a84b !important;
-    color: #ffffff !important;
-    border-radius: 0 6px 6px 0;
-}
-
-hr {
-    border: none;
-    border-top: 1px solid #2a2a2a !important;
-    margin: 1.5rem 0;
-}
-
-p, li, span, label {
-    color: #ffffff !important;
 }
 </style>
 """
