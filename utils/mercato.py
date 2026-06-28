@@ -3,9 +3,151 @@ import pandas as pd
 import numpy as np
 from modele import nettoyer_note, calculer_clutch, compter_matchs, absences_consecutives, alerte_blessure
 
+# ─── Identité visuelle Maestro Tactico ───────────────────────────────────────
+MT_CSS = """
+<style>
+:root {
+    --mt-bg:        #0d0d0d;
+    --mt-card:      #1a1a1a;
+    --mt-or:        #c8a84b;
+    --mt-or-fonce:  #8a6f2e;
+    --mt-blanc:     #ffffff;
+    --mt-gris:      #555555;
+}
+
+[data-testid="stAppViewContainer"] {
+    background-color: var(--mt-bg) !important;
+}
+[data-testid="stHeader"] {
+    background-color: #0d0d0d !important;
+}
+section[data-testid="stSidebar"] {
+    background-color: #141414 !important;
+}
+
+h1, h2, h3 {
+    color: var(--mt-blanc) !important;
+    letter-spacing: 0.05em;
+}
+
+/* ── Radio (stratégie) ── */
+[data-testid="stRadio"] label {
+    color: var(--mt-blanc) !important;
+}
+[data-testid="stRadio"] [data-baseweb="radio"] div {
+    border-color: var(--mt-or) !important;
+}
+
+/* ── Tabs ── */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background-color: #141414;
+    border-bottom: 1px solid #2a2a2a;
+    gap: 4px;
+}
+[data-testid="stTabs"] [data-baseweb="tab"] {
+    color: var(--mt-gris) !important;
+    background-color: transparent !important;
+    border-radius: 4px 4px 0 0;
+    padding: 8px 16px;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+[data-testid="stTabs"] [aria-selected="true"] {
+    color: var(--mt-or) !important;
+    border-bottom: 2px solid var(--mt-or) !important;
+    background-color: transparent !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab"]:hover {
+    color: var(--mt-or) !important;
+}
+
+/* ── Dataframe ── */
+[data-testid="stDataFrame"] {
+    border-radius: 8px;
+    overflow: hidden;
+    border-left: 3px solid;
+    border-image: linear-gradient(to bottom, var(--mt-or), var(--mt-or-fonce)) 1;
+}
+[data-testid="stDataFrame"] table {
+    background-color: var(--mt-card) !important;
+    color: var(--mt-blanc) !important;
+}
+[data-testid="stDataFrame"] thead tr th {
+    background-color: #0d0d0d !important;
+    color: var(--mt-or) !important;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--mt-or) !important;
+}
+[data-testid="stDataFrame"] tbody tr:hover td {
+    background-color: #222222 !important;
+}
+
+/* ── Expander ── */
+[data-testid="stExpander"] {
+    background-color: var(--mt-card) !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 8px !important;
+    border-left: 3px solid var(--mt-or) !important;
+}
+[data-testid="stExpander"] summary {
+    color: var(--mt-or) !important;
+    font-weight: 600;
+}
+[data-testid="stExpander"] table {
+    background-color: transparent !important;
+    color: var(--mt-blanc) !important;
+}
+[data-testid="stExpander"] table thead th {
+    color: var(--mt-or) !important;
+    border-bottom: 1px solid var(--mt-or) !important;
+}
+
+/* ── Info / Warning ── */
+[data-testid="stWarning"], [data-testid="stInfo"] {
+    background-color: var(--mt-card) !important;
+    border-left: 3px solid var(--mt-or) !important;
+    color: var(--mt-blanc) !important;
+    border-radius: 0 6px 6px 0;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #2a2a2a !important;
+    margin: 1.5rem 0;
+}
+
+p, li, span, label {
+    color: var(--mt-blanc) !important;
+}
+strong {
+    color: var(--mt-or) !important;
+}
+</style>
+"""
+
+def _separateur(titre):
+    st.markdown(f"""
+    <div style="display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem;">
+        <div style="flex:1;height:1px;background:linear-gradient(to right,#c8a84b,transparent);"></div>
+        <span style="color:#c8a84b;font-weight:700;letter-spacing:0.12em;font-size:0.82rem;white-space:nowrap;">
+            {titre}
+        </span>
+        <div style="flex:1;height:1px;background:linear-gradient(to left,#c8a84b,transparent);"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 def afficher_mercato(df, cols_journees):
 
-    st.header("🛒 Conseiller Mercato")
+    st.markdown(MT_CSS, unsafe_allow_html=True)
+
+    st.markdown("""
+    <h1 style="color:#ffffff;letter-spacing:0.08em;margin-bottom:0.2rem;">
+        🛒 Conseiller Mercato
+    </h1>
+    """, unsafe_allow_html=True)
 
     df_mercato = df[['Joueur', 'Poste', 'Cote', 'Note', 'Variation', 'Buts', '%Titu', 'Indispo ?']].copy()
 
@@ -97,7 +239,8 @@ def afficher_mercato(df, cols_journees):
         (df_mercato['%Titu'] >= 50)
     ].copy()
 
-    # Sélection stratégie
+    _separateur("STRATÉGIE MERCATO")
+
     strategie_choisie = st.radio(
         "Choisissez votre stratégie mercato :",
         ["⭐⭐ Stars", "⭐ Valeurs sûres", "⚖️ Équilibre", "🌱 Pépites", "⚠️ À éviter"],
@@ -113,8 +256,9 @@ def afficher_mercato(df, cols_journees):
 | 🏥 | Retour de blessure — 8+ matchs d'absence |
 | 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
 """)
+
     cols_affichage = ['Joueur', 'Cote', 'Note', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
-    
+
     strategie_map = {
         "⭐⭐ Stars": ('stars', df_stars),
         "⭐ Valeurs sûres": ('valeurs_sures', df_valeurs),
@@ -122,8 +266,14 @@ def afficher_mercato(df, cols_journees):
         "🌱 Pépites": ('pepites', df_pepites),
     }
 
+    _separateur("JOUEURS PAR POSTE")
+
     if strategie_choisie == "⚠️ À éviter":
-        st.subheader("⚠️ Joueurs chers mais décevants")
+        st.markdown("""
+        <p style="color:#c8a84b;font-weight:700;letter-spacing:0.06em;">
+            ⚠️ JOUEURS CHERS MAIS DÉCEVANTS
+        </p>
+        """, unsafe_allow_html=True)
         df_eviter['Raison'] = df_eviter.apply(lambda row:
             "💸 Cher + peu de matchs" if row['Matchs_joues'] < seuil_matchs
             else "📉 Cher + note décevante", axis=1
