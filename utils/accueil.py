@@ -67,7 +67,7 @@ def afficher_accueil():
     <span class="tactico">TACTICO</span>
   </div>
   <h1 class="hero-title">Le coach que vos adversaires <span>n\'ont pas</span></h1>
-  <p class="hero-subtitle" style="text-align:center !important; width:100%; display:block;">Recommandations hebdo, stratégie mercato, analyse de vos adversaires.</p>
+  <div style="font-family:Raleway,sans-serif; font-size:16px; color:#aaaaaa; line-height:1.7; margin:0 auto 48px auto; text-align:center; width:100%;">Recommandations hebdo, stratégie mercato, analyse de vos adversaires.</div>
 </div>
 """, unsafe_allow_html=True)
 
