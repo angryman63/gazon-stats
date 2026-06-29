@@ -29,26 +29,26 @@ def afficher_accueil():
     <div class="hero-logo-sep"></div>
     <div class="hero-logo-tactico">TACTICO</div>
   </div>
-  <h1 class="hero-title">Devenez le meilleur manager<br><span>de votre ligue</span></h1>
-  <div style="text-align:center !important; width:100%; display:block;"><p class="hero-subtitle">Vos rivaux font des choix au feeling. Vous, vous avez Maestro Tactico. Chaque journée, chaque mercato, chaque match — prenez les décisions qui font la différence.</p></div>
+  <h1 class="hero-title">Le coach que vos adversaires<br><span>n'ont pas</span></h1>
+  <div style="text-align:center !important; width:100%; display:block;"><p class="hero-subtitle">Recommandations hebdo, stratégie mercato, analyse de vos adversaires.</p></div>
   <div class="features-grid">
     <div class="feature-card">
       <span class="feature-emoji">🏆</span>
       <div class="feature-name">Conseiller Hebdo</div>
       <span class="feature-badge badge-free">Gratuit</span>
-      <p class="feature-desc">Qui titulariser cette semaine ? Score de fiabilité, régularité, alertes — votre compo du dimanche ne sera plus jamais hasardeuse.</p>
+      <p class="feature-desc">La meilleure compo possible à chaque match.</p>
     </div>
     <div class="feature-card">
       <span class="feature-emoji">🛒</span>
       <div class="feature-name">Conseiller Mercato</div>
       <span class="feature-badge badge-premium">Premium</span>
-      <p class="feature-desc">Stars, valeurs súres, pépites planquées : trouvez les joueurs qui feront exploser votre budget dans le bon sens.</p>
+      <p class="feature-desc">Le bon joueur, au bon prix.</p>
     </div>
     <div class="feature-card">
       <span class="feature-emoji">⚔️</span>
-      <div class="feature-name">Analyser l'Adversaire</div>
+      <div class="feature-name">Simuler le match</div>
       <span class="feature-badge badge-premium">Premium</span>
-      <p class="feature-desc">% de victoire, stratégie optimale, choix du capitaine — affrontez votre prochain adversaire avec les cartes en main.</p>
+      <p class="feature-desc">Le match est déjà joué.</p>
     </div>
   </div>
 </div>
