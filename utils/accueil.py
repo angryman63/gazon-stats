@@ -16,7 +16,7 @@ def afficher_accueil():
     display: inline-flex; align-items: center; justify-content: center;
     width: 110px; height: 110px; border-radius: 50%;
     border: 3px solid #c8a84b; background-color: #0d0d0d;
-    margin-bottom: 40px; flex-direction: column;
+    margin: 0 auto 40px auto; flex-direction: column;
 }
 .hero-logo-big .mt {
     font-family: "Oswald", sans-serif; font-weight: 700;
@@ -63,9 +63,9 @@ def afficher_accueil():
 
 <div class="hero-section">
   <div class="hero-logo-big">
-    <div class="mt">MT</div>
+    <span class="mt">MT</span>
     <div class="sep"></div>
-    <div class="tactico">TACTICO</div>
+    <span class="tactico">TACTICO</span>
   </div>
   <h1 class="hero-title">Le coach que vos adversaires <span>n\'ont pas</span></h1>
   <p class="hero-subtitle">Recommandations hebdo, strat\u00e9gie mercato, analyse de vos adversaires.</p>
