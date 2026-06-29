@@ -307,7 +307,7 @@ LOGO_HTML = """
   <div style="
       width:48px; height:48px; border-radius:50%;
       border:2px solid #c8a84b;
-      background:#141414;
+      background:#0d0d0d;
       display:flex; flex-direction:column;
       align-items:center; justify-content:center;
       flex-shrink:0;">
@@ -317,7 +317,6 @@ LOGO_HTML = """
   </div>
   <div>
     <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; color:#ffffff; letter-spacing:1px;">MAESTRO TACTICO</div>
-    <div style="font-family:'Inter',sans-serif; font-size:11px; color:#c8a84b; margin-top:1px;">L'app qui fait gagner</div>
   </div>
 </div>
 """
