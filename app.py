@@ -10,9 +10,10 @@ import time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from modele import nettoyer_note
-from utils.hebdo import afficher_hebdo
-from utils.mercato import afficher_mercato
-from utils.adversaire import afficher_adversaire
+from pages.hebdo import afficher_hebdo
+from pages.mercato import afficher_mercato
+from pages.adversaire import afficher_adversaire
+
 # ============================================================
 # CONFIG PAGE
 # ============================================================
@@ -328,7 +329,7 @@ with st.sidebar:
 # URL GITHUB — BASE JOUEURS
 # ============================================================
 
-GITHUB_URL = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/data/mpgstats.xlsx"
+GITHUB_URL = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/L1Joueurs25-26.xlsx"
 
 # ============================================================
 # CHARGEMENT AUTOMATIQUE DEPUIS GITHUB
