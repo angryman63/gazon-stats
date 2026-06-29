@@ -126,10 +126,10 @@ TOPBAR_HTML = f"""
         <div style="
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
-            font-size: 8px;
+            font-size: 7px;
             color: #c8a84b;
-            letter-spacing: 4px;
-            text-indent: 4px;
+            letter-spacing: 1.5px;
+            text-indent: 1.5px;
             opacity: 0.85;
             line-height: 1;
         ">TACTICO</div>
@@ -195,10 +195,10 @@ SIDEBAR_LOGO_HTML = f"""
         <div style="
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
-            font-size: 9px;
+            font-size: 8px;
             color: #c8a84b;
-            letter-spacing: 4px;
-            text-indent: 4px;
+            letter-spacing: 1.5px;
+            text-indent: 1.5px;
             opacity: 0.85;
             line-height: 1;
         ">TACTICO</div>
