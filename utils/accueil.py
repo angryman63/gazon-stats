@@ -11,7 +11,7 @@ def afficher_accueil():
 .hero-logo-tactico { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 10px; color: #c8a84b; letter-spacing: 4px; opacity: 0.85; line-height: 1; }
 .hero-title { font-family: 'Oswald', sans-serif; font-size: 42px; font-weight: 700; color: #ffffff; line-height: 1.1; margin: 0 0 8px 0; }
 .hero-title span { color: #c8a84b; }
-.hero-subtitle { font-family: 'Inter', sans-serif; font-size: 17px; color: #aaaaaa; line-height: 1.6; margin: 0 auto 40px auto; max-width: 580px; text-align: center !important; }
+.hero-subtitle { font-family: 'Inter', sans-serif; font-size: 17px; color: #aaaaaa; line-height: 1.6; margin: 0 auto 40px auto; max-width: 640px; text-align: center !important; }
 .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 860px; margin: 0 auto 40px auto; padding: 0 8px; }
 .feature-card { background-color: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px 20px; text-align: left; }
 .feature-emoji { font-size: 28px; margin-bottom: 10px; display: block; }
