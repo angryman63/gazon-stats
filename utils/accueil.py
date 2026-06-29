@@ -30,7 +30,7 @@ def afficher_accueil():
     <div class="hero-logo-tactico">TACTICO</div>
   </div>
   <h1 class="hero-title">Devenez le meilleur manager<br><span>de votre ligue</span></h1>
-  <p class="hero-subtitle">Vos rivaux font des choix au feeling. Vous, vous avez Maestro Tactico.<br>Chaque journée, chaque mercato, chaque match — prenez les décisions qui font la différence.</p>
+  <div style="text-align:center !important; width:100%; display:block;"><p class="hero-subtitle">Vos rivaux font des choix au feeling. Vous, vous avez Maestro Tactico. Chaque journée, chaque mercato, chaque match — prenez les décisions qui font la différence.</p></div>
   <div class="features-grid">
     <div class="feature-card">
       <span class="feature-emoji">🏆</span>
