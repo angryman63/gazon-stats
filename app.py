@@ -10,9 +10,9 @@ import time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from modele import nettoyer_note
-from pages.hebdo import afficher_hebdo
-from pages.mercato import afficher_mercato
-from pages.adversaire import afficher_adversaire
+from utils.hebdo import afficher_hebdo
+from utils.mercato import afficher_mercato
+from utils.adversaire import afficher_adversaire
 
 # ============================================================
 # CONFIG PAGE
