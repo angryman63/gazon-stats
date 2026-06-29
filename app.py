@@ -356,7 +356,7 @@ donnees_chargees = "df_joueurs" in st.session_state
 if not donnees_chargees:
     # Afficher la page d'accueil avec indicateur de chargement
     with placeholder.container():
-        afficher_accueil(chargement_en_cours=True)
+        afficher_accueil()
         barre = st.progress(0, text="Connexion à la base joueurs…")
         for i in range(0, 60, 5):
             time.sleep(0.08)
@@ -417,7 +417,7 @@ page0, page1, page2, page3 = st.tabs([
 ])
 
 with page0:
-    afficher_accueil(chargement_en_cours=False)
+    afficher_accueil()
 
 with page1:
     afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer)
