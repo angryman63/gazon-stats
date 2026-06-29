@@ -413,7 +413,7 @@ page0, page1, page2, page3 = st.tabs([
     "🏠 Accueil",
     "🏆 Conseiller hebdo",
     "🛒 Mercato",
-    "⚔️ Analyser mon adversaire"
+    "⚔️ Simuler le match"
 ])
 
 with page0:
