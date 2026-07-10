@@ -10,6 +10,7 @@ import time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from modele import nettoyer_note
+from utils.fusion_joueurs import fusionner_fichiers_joueurs
 from utils.accueil import afficher_accueil
 from utils.hebdo import afficher_hebdo
 from utils.mercato import afficher_mercato
@@ -326,20 +327,31 @@ with st.sidebar:
     st.markdown("---")
 
 # ============================================================
-# URL GITHUB — BASE JOUEURS
+# URLS GITHUB — FICHIERS JOUEURS PAR TAILLE DE LIGUE
 # ============================================================
 
-GITHUB_URL = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/L1Joueurs25-26.xlsx"
+GITHUB_URL_6 = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/L1joueurs25-26_6joueurs.xlsx"
+GITHUB_URL_8 = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/L1joueurs25-26_8joueurs.xlsx"
+GITHUB_URL_10 = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/L1joueurs25-26_10joueurs.xlsx"
 
 # ============================================================
-# CHARGEMENT AUTOMATIQUE DEPUIS GITHUB
+# CHARGEMENT + FUSION AUTOMATIQUE DEPUIS GITHUB
 # ============================================================
 
 @st.cache_data(show_spinner=False, ttl=3600)
-def charger_depuis_github(url: str):
-    response = requests.get(url, timeout=20)
-    response.raise_for_status()
-    df = pd.read_excel(io.BytesIO(response.content))
+def charger_depuis_github():
+    r6 = requests.get(GITHUB_URL_6, timeout=20)
+    r6.raise_for_status()
+    r8 = requests.get(GITHUB_URL_8, timeout=20)
+    r8.raise_for_status()
+    r10 = requests.get(GITHUB_URL_10, timeout=20)
+    r10.raise_for_status()
+
+    df = fusionner_fichiers_joueurs(
+        io.BytesIO(r6.content),
+        io.BytesIO(r8.content),
+        io.BytesIO(r10.content),
+    )
     return df
 
 # ============================================================
@@ -362,8 +374,12 @@ if not donnees_chargees:
             barre.progress(i, text="Connexion à la base joueurs…")
 
     try:
-        df_raw = charger_depuis_github(GITHUB_URL)
+        df_raw = charger_depuis_github()
         st.session_state["df_joueurs"] = df_raw
+    except ValueError as e:
+        placeholder.empty()
+        st.error(f"⚠️ Erreur lors de la fusion des fichiers joueurs : {e}")
+        st.stop()
     except Exception as e:
         placeholder.empty()
         st.error(f"⚠️ Impossible de charger la base joueurs depuis GitHub. Vérifiez votre connexion ou contactez le support.")
