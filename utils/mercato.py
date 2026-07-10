@@ -252,7 +252,7 @@ La Tension est calculée sur le % Achat T1 toutes tailles de ligue confondues
             df_eviter[['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
                        'Note', 'Matchs_joues', '%Titu', 'Alerte', 'Raison']
                        ].rename(columns={'Enchere': 'Enchère moy.'}).reset_index(drop=True),
-            use_container_width=True,
+            width='stretch',
             height=400
         )
     else:
@@ -288,7 +288,7 @@ La Tension est calculée sur le % Achat T1 toutes tailles de ligue confondues
                     st.dataframe(
                         top[cols_affichage + ['Clutch']
                             ].rename(columns={'Enchere': 'Enchère moy.'}).reset_index(drop=True),
-                        use_container_width=True,
+                        width='stretch',
                         height=400
                     )
                 else:
