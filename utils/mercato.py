@@ -3,64 +3,106 @@ import pandas as pd
 import numpy as np
 from modele import nettoyer_note, calculer_clutch, compter_matchs, absences_consecutives, alerte_blessure
 
-# ─── Identité visuelle Maestro Tactico (sans règles dataframe) ───────────────
-MT_CSS = """
+# ---------------------------------------------------------------------------
+# Colonnes d'enchères disponibles selon la taille de ligue (fichier joueurs enrichi)
+# ---------------------------------------------------------------------------
+TAILLES_LIGUE = {
+    "6 joueurs": {
+        "enchere": "Enchere moy/L6",
+        "achat_t1": "% achat T1/L6",
+    },
+    "8 joueurs": {
+        "enchere": "Enchere moy/L8",
+        "achat_t1": "% achat T1/L8",
+    },
+    "10 joueurs": {
+        "enchere": "Enchere moy/L10",
+        "achat_t1": "% achat T1/L10",
+    },
+    "Toutes tailles": {
+        "enchere": "Enchere moy",
+        "achat_t1": "% achat T1",
+    },
+}
+
+STYLE_MERCATO = """
 <style>
-[data-testid="stTabs"] [data-baseweb="tab-list"] {
-    border-bottom: 1px solid #2a2a2a;
-    gap: 4px;
+div[data-testid="stRadio"] > div {
+    background-color: #1a1a1a;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(200, 168, 75, 0.35);
 }
-[data-testid="stTabs"] [data-baseweb="tab"] {
-    color: #555555 !important;
-    background-color: transparent !important;
-    border-radius: 4px 4px 0 0;
-    padding: 8px 16px;
-    font-weight: 600;
+div[data-testid="stRadio"] label p {
+    color: #f5f5f5 !important;
 }
-[data-testid="stTabs"] [aria-selected="true"] {
-    color: #c8a84b !important;
-    border-bottom: 2px solid #c8a84b !important;
-    background-color: transparent !important;
-}
-[data-testid="stTabs"] [data-baseweb="tab"]:hover {
-    color: #c8a84b !important;
-}
-[data-testid="stExpander"] {
-    border-left: 3px solid #c8a84b !important;
-}
-[data-testid="stExpander"] summary {
-    color: #c8a84b !important;
-    font-weight: 600;
+.mercato-caption {
+    color: #c8a84b;
+    font-size: 0.85em;
+    margin-top: -6px;
+    margin-bottom: 10px;
 }
 </style>
 """
 
-def _separateur(titre):
-    st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem;">
-        <div style="flex:1;height:1px;background:linear-gradient(to right,#c8a84b,transparent);"></div>
-        <span style="color:#c8a84b;font-weight:700;letter-spacing:0.12em;font-size:0.82rem;white-space:nowrap;">
-            {titre}
-        </span>
-        <div style="flex:1;height:1px;background:linear-gradient(to left,#c8a84b,transparent);"></div>
-    </div>
-    """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────────────────────────────────────
+def _colonnes_taille(df, taille_label):
+    """Renvoie les colonnes enchère / % achat T1 pour la taille choisie.
+    Si le fichier chargé ne contient pas les colonnes détaillées par taille,
+    on retombe sur les colonnes globales (moyenne toutes tailles confondues)."""
+    cfg = TAILLES_LIGUE[taille_label]
+    col_enchere = cfg["enchere"] if cfg["enchere"] in df.columns else "Enchere moy"
+    col_achat = cfg["achat_t1"] if cfg["achat_t1"] in df.columns else "% achat T1"
+    return col_enchere, col_achat
+
+
+def _tension(pct):
+    if pd.isna(pct):
+        return "❓"
+    if pct >= 80:
+        return "🔥🔥 Très demandé"
+    if pct >= 50:
+        return "🔥 Demandé"
+    if pct >= 20:
+        return "😐 Modéré"
+    return "🧊 Peu demandé"
+
 
 def afficher_mercato(df, cols_journees):
+    st.markdown(STYLE_MERCATO, unsafe_allow_html=True)
+    st.header("🛒 Conseiller Mercato")
 
-    st.markdown(MT_CSS, unsafe_allow_html=True)
+    # --- Sélecteur de taille de ligue ---
+    taille_choisie = st.radio(
+        "Taille de ta ligue :",
+        list(TAILLES_LIGUE.keys()),
+        horizontal=True,
+        key="mercato_taille_ligue"
+    )
+    col_enchere, col_achat = _colonnes_taille(df, taille_choisie)
 
-    st.markdown("""
-    <h1 style="color:#ffffff;letter-spacing:0.08em;margin-bottom:0.2rem;">
-        🛒 Conseiller Mercato
-    </h1>
-    """, unsafe_allow_html=True)
+    if col_enchere not in df.columns:
+        st.warning(
+            "Aucune donnée d'enchères trouvée dans le fichier joueurs chargé. "
+            "Vérifie que le fichier joueurs enrichi (avec les colonnes d'enchères) est bien utilisé."
+        )
+        return
 
-    df_mercato = df[['Joueur', 'Poste', 'Cote', 'Note', 'Variation', 'Buts', '%Titu', 'Indispo ?']].copy()
+    if taille_choisie != "Toutes tailles" and TAILLES_LIGUE[taille_choisie]["enchere"] not in df.columns:
+        st.caption(
+            f"⚠️ Pas de donnée détaillée pour les ligues à {taille_choisie.split()[0]} — "
+            f"affichage de l'enchère moyenne toutes tailles confondues."
+        )
 
-    for col in ['Cote', 'Note', 'Variation', 'Buts', '%Titu']:
+    base_cols = ['Joueur', 'Poste', 'Cote', 'Var Cote', col_enchere, col_achat,
+                 'Note', 'Variation', 'Buts', '%Titu', 'Indispo ?']
+    df_mercato = df[base_cols].copy()
+    df_mercato = df_mercato.rename(columns={
+        col_enchere: 'Enchere',
+        col_achat: 'AchatT1',
+    })
+
+    for col in ['Cote', 'Var Cote', 'Enchere', 'AchatT1', 'Note', 'Variation', 'Buts', '%Titu']:
         df_mercato[col] = pd.to_numeric(df_mercato[col], errors='coerce')
 
     df_mercato = df_mercato.dropna(subset=['Cote', 'Note', 'Variation', '%Titu'])
@@ -80,6 +122,9 @@ def afficher_mercato(df, cols_journees):
     df_mercato['Popularite'] = df_mercato['Cote'] * df_mercato['Note'] / 100
     df_mercato['Ratio'] = df_mercato['Note'] / df_mercato['Cote']
 
+    # --- Tension du marché (à partir du % achat T1) ---
+    df_mercato['Tension'] = df_mercato['AchatT1'].apply(_tension)
+
     # À éviter — avant filtres
     df_eviter = df_mercato[
         ((df_mercato['Cote'] >= 20) & (df_mercato['Note'] < 5.2)) |
@@ -90,10 +135,10 @@ def afficher_mercato(df, cols_journees):
     # Normalisation
     for col in ['Variation', 'Clutch', 'Popularite', 'Ratio']:
         col_min = df_mercato[col].min()
-        col_max = df_mercato[col].max()
+        col_max_norm = df_mercato[col].max()
         df_mercato[f'{col}_norm'] = (
-            (df_mercato[col] - col_min) / (col_max - col_min)
-            if col_max > col_min else 0
+            (df_mercato[col] - col_min) / (col_max_norm - col_min)
+            if col_max_norm > col_min else 0
         )
 
     clutch_poids = {
@@ -148,8 +193,7 @@ def afficher_mercato(df, cols_journees):
         (df_mercato['%Titu'] >= 50)
     ].copy()
 
-    _separateur("STRATÉGIE MERCATO")
-
+    # Sélection stratégie
     strategie_choisie = st.radio(
         "Choisissez votre stratégie mercato :",
         ["⭐⭐ Stars", "⭐ Valeurs sûres", "⚖️ Équilibre", "🌱 Pépites", "⚠️ À éviter"],
@@ -166,7 +210,18 @@ def afficher_mercato(df, cols_journees):
 | 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
 """)
 
-    cols_affichage = ['Joueur', 'Cote', 'Note', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
+    with st.expander("🔥 Légende tension marché"):
+        st.markdown("""
+| Tension | % Achat T1 |
+|---|---|
+| 🔥🔥 Très demandé | 80% et plus |
+| 🔥 Demandé | 50% à 79% |
+| 😐 Modéré | 20% à 49% |
+| 🧊 Peu demandé | moins de 20% |
+""")
+
+    cols_affichage = ['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
+                       'Note', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
 
     strategie_map = {
         "⭐⭐ Stars": ('stars', df_stars),
@@ -175,22 +230,29 @@ def afficher_mercato(df, cols_journees):
         "🌱 Pépites": ('pepites', df_pepites),
     }
 
-    _separateur("JOUEURS PAR POSTE")
-
     if strategie_choisie == "⚠️ À éviter":
-        st.markdown('<p style="color:#c8a84b;font-weight:700;letter-spacing:0.06em;">⚠️ JOUEURS CHERS MAIS DÉCEVANTS</p>', unsafe_allow_html=True)
+        st.subheader("⚠️ Joueurs chers mais décevants")
+        st.markdown(
+            f'<p class="mercato-caption">Enchères affichées pour : {taille_choisie}</p>',
+            unsafe_allow_html=True
+        )
         df_eviter['Raison'] = df_eviter.apply(lambda row:
             "💸 Cher + peu de matchs" if row['Matchs_joues'] < seuil_matchs
             else "📉 Cher + note décevante", axis=1
         )
         st.dataframe(
-            df_eviter[['Joueur', 'Poste', 'Cote', 'Note', 'Matchs_joues', '%Titu', 'Alerte', 'Raison']
-            ].reset_index(drop=True),
+            df_eviter[['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
+                       'Note', 'Matchs_joues', '%Titu', 'Alerte', 'Raison']
+                       ].rename(columns={'Enchere': 'Enchère moy.'}).reset_index(drop=True),
             use_container_width=True,
             height=400
         )
     else:
         strategie_key, df_s = strategie_map[strategie_choisie]
+        st.markdown(
+            f'<p class="mercato-caption">Enchères affichées pour : {taille_choisie}</p>',
+            unsafe_allow_html=True
+        )
         postes = {
             'A': '⚡ Attaquants', 'MO': '🎯 Milieux Off.',
             'MD': '🛡️ Milieux Déf.', 'DC': '🔒 Défenseurs C.',
@@ -216,7 +278,8 @@ def afficher_mercato(df, cols_journees):
 
                 if len(top) > 0:
                     st.dataframe(
-                        top[cols_affichage + ['Clutch']].reset_index(drop=True),
+                        top[cols_affichage + ['Clutch']
+                            ].rename(columns={'Enchere': 'Enchère moy.'}).reset_index(drop=True),
                         use_container_width=True,
                         height=400
                     )
