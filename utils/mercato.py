@@ -47,12 +47,17 @@ div[data-testid="stRadio"] label p {
 
 
 def _colonnes_taille(df, taille_label):
-    """Renvoie les colonnes enchère / % achat T1 pour la taille choisie.
-    Si le fichier chargé ne contient pas les colonnes détaillées par taille,
-    on retombe sur les colonnes globales (moyenne toutes tailles confondues)."""
+    """Renvoie la colonne enchère pour la taille choisie, et la colonne % achat T1
+    à utiliser pour la Tension.
+
+    L'enchère s'adapte à la taille de ligue sélectionnée. La Tension, elle, se base
+    toujours sur le % achat T1 global (toutes tailles confondues) : sur certaines
+    tailles de ligue, l'échantillon de ligues suivies est trop petit et fait sauter
+    le chiffre de façon peu fiable (ex: 11%, 22%, 33% selon 1, 2 ou 3 ligues sur 9).
+    Le chiffre global, calculé sur un échantillon plus large, est plus stable."""
     cfg = TAILLES_LIGUE[taille_label]
     col_enchere = cfg["enchere"] if cfg["enchere"] in df.columns else "Enchere moy"
-    col_achat = cfg["achat_t1"] if cfg["achat_t1"] in df.columns else "% achat T1"
+    col_achat = "% achat T1" if "% achat T1" in df.columns else cfg["achat_t1"]
     return col_enchere, col_achat
 
 
@@ -218,6 +223,9 @@ def afficher_mercato(df, cols_journees):
 | 🔥 Demandé | 50% à 79% |
 | 😐 Modéré | 20% à 49% |
 | 🧊 Peu demandé | moins de 20% |
+
+La Tension est calculée sur le % Achat T1 toutes tailles de ligue confondues
+(échantillon plus large et plus fiable que par taille de ligue individuelle).
 """)
 
     cols_affichage = ['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
