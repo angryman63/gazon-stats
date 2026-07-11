@@ -93,7 +93,7 @@ def _formater_cellule(col, val):
         return f"{val:.0f}"
     if col == '%Titu':
         return f"{val:.0f}%"
-    if col == 'Matchs_joues':
+    if col == 'Matchs joués':
         return f"{val:.0f}"
     return str(val)
 
@@ -104,11 +104,11 @@ def _table_html(df):
 
 def afficher_mercato(df, cols_journees):
     inject_style()
-    st.header("🛒 Conseiller Mercato")
+    st.markdown('<div class="gs-page-title">🛒 Conseiller Mercato</div>', unsafe_allow_html=True)
 
     # --- Sélecteur de taille de ligue ---
     taille_choisie = st.radio(
-        "Taille de ta ligue :",
+        "Taille de la ligue :",
         list(TAILLES_LIGUE.keys()),
         horizontal=True,
         key="mercato_taille_ligue"
@@ -244,7 +244,7 @@ def afficher_mercato(df, cols_journees):
 | 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
 """)
 
-    with st.expander("Légende demande joueur"):
+    with st.expander("Légende — indicateur de demande"):
         st.markdown("""
 | Demande |
 |---|
@@ -278,7 +278,7 @@ def afficher_mercato(df, cols_journees):
             _table_html(
                 df_eviter[['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
                            'Note', 'Matchs_joues', '%Titu', 'Alerte', 'Raison']
-                           ].rename(columns={'Enchere': 'Enchère moy.', 'Tension': 'Demande'}).reset_index(drop=True)
+                           ].rename(columns={'Enchere': 'Enchère moy.', 'Tension': 'Demande', 'Matchs_joues': 'Matchs joués'}).reset_index(drop=True)
             ),
             unsafe_allow_html=True
         )
@@ -315,7 +315,7 @@ def afficher_mercato(df, cols_journees):
                     st.markdown(
                         _table_html(
                             top[cols_affichage + ['Clutch']
-                                ].rename(columns={'Enchere': 'Enchère moy.', 'Tension': 'Demande'}).reset_index(drop=True)
+                                ].rename(columns={'Enchere': 'Enchère moy.', 'Tension': 'Demande', 'Matchs_joues': 'Matchs joués'}).reset_index(drop=True)
                         ),
                         unsafe_allow_html=True
                     )
