@@ -1,0 +1,39 @@
+name: Fusion joueurs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "L1joueurs25-26_6joueurs.xlsx"
+      - "L1joueurs25-26_8joueurs.xlsx"
+      - "L1joueurs25-26_10joueurs.xlsx"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fusion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le repo
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install pandas openpyxl
+
+      - name: Fusionner les fichiers joueurs
+        run: python scripts/fusionner_joueurs.py
+
+      - name: Publier le fichier fusionné
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add joueurs_fusionne.xlsx
+          git diff --staged --quiet || git commit -m "Fusion automatique des fichiers joueurs"
+          git push
