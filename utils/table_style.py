@@ -69,6 +69,14 @@ div[data-testid="stRadio"] label p {
 .gs-pill-good  { background-color: #1e3a24; color: #6fd18c; }
 .gs-pill-mid   { background-color: #2a2a2a; color: #c8a84b; }
 .gs-pill-info  { background-color: #14262e; color: #6ec6d9; }
+.gs-page-title {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 1.9em;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    margin: 0 0 14px 0;
+}
 .gs-dash { color: #555555; }
 
 .gs-roster {
