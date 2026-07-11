@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import html
 from modele import nettoyer_note, calculer_clutch, compter_matchs, absences_consecutives, alerte_blessure
+from utils.table_style import inject_style, pill, dash, name_cell, table_html
 
 # ---------------------------------------------------------------------------
 # Colonnes d'enchères disponibles selon la taille de ligue (fichier joueurs enrichi)
@@ -25,88 +25,6 @@ TAILLES_LIGUE = {
         "achat_t1": "% achat T1",
     },
 }
-
-STYLE_MERCATO = """
-<style>
-div[data-testid="stRadio"] > div {
-    background-color: #1a1a1a;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(200, 168, 75, 0.35);
-}
-div[data-testid="stRadio"] label p {
-    color: #f5f5f5 !important;
-}
-.mercato-caption {
-    color: #c8a84b;
-    font-size: 0.85em;
-    margin-top: -6px;
-    margin-bottom: 10px;
-}
-.mercato-table-wrap {
-    max-height: 440px;
-    overflow-y: auto;
-    border-radius: 10px;
-    border: 1px solid rgba(200, 168, 75, 0.25);
-    margin-bottom: 8px;
-}
-.mercato-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.87em;
-}
-.mercato-table thead th {
-    position: sticky;
-    top: 0;
-    background-color: #0d0d0d;
-    color: #c8a84b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.72em;
-    font-weight: 700;
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid rgba(200, 168, 75, 0.35);
-    white-space: nowrap;
-}
-.mercato-table tbody td {
-    padding: 9px 14px;
-    color: #e8e8e8;
-    border-bottom: 1px solid #232323;
-    white-space: nowrap;
-}
-.mercato-table tbody tr:nth-child(odd) {
-    background-color: #161616;
-}
-.mercato-table tbody tr:nth-child(even) {
-    background-color: #1c1c1c;
-}
-.mercato-table tbody tr:hover {
-    background-color: #2a2412;
-}
-.mercato-table .joueur-cell {
-    color: #ffffff;
-    font-weight: 600;
-}
-.mercato-pill {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 0.92em;
-    font-weight: 600;
-    white-space: nowrap;
-}
-.pill-hot2 { background-color: #3d1f1f; color: #ff6b6b; }
-.pill-hot1 { background-color: #3a2a12; color: #e8a33d; }
-.pill-mid  { background-color: #2a2a2a; color: #c8a84b; }
-.pill-cold { background-color: #14262e; color: #6ec6d9; }
-.pill-alerte { background-color: #3d1f1f; color: #ff6b6b; }
-.mercato-dash {
-    color: #555555;
-}
-</style>
-"""
 
 
 def _colonnes_taille(df, taille_label):
@@ -139,23 +57,21 @@ def _tension(pct):
 def _pill_demande(val):
     val = str(val)
     if 'Très demandé' in val:
-        cls = 'pill-hot2'
-    elif 'Demandé' in val:
-        cls = 'pill-hot1'
-    elif 'Modéré' in val:
-        cls = 'pill-mid'
-    elif 'Peu demandé' in val:
-        cls = 'pill-cold'
-    else:
-        return f'<span class="mercato-dash">{html.escape(val)}</span>'
-    return f'<span class="mercato-pill {cls}">{html.escape(val)}</span>'
+        return pill(val, 'bad')
+    if 'Demandé' in val:
+        return pill(val, 'warn')
+    if 'Modéré' in val:
+        return pill(val, 'mid')
+    if 'Peu demandé' in val:
+        return pill(val, 'info')
+    return dash(val)
 
 
 def _pill_alerte(val):
     val = '' if pd.isna(val) else str(val).strip()
     if not val:
-        return '<span class="mercato-dash">—</span>'
-    return f'<span class="mercato-pill pill-alerte">{html.escape(val)}</span>'
+        return dash()
+    return pill(val, 'bad')
 
 
 def _formater_cellule(col, val):
@@ -164,9 +80,9 @@ def _formater_cellule(col, val):
     if col == 'Alerte':
         return _pill_alerte(val)
     if col == 'Joueur':
-        return f'<span class="joueur-cell">{html.escape(str(val))}</span>'
+        return name_cell(val)
     if pd.isna(val):
-        return '<span class="mercato-dash">—</span>'
+        return dash()
     if col == 'Cote':
         return f"{val:.0f}"
     if col == 'Enchère moy.':
@@ -179,26 +95,15 @@ def _formater_cellule(col, val):
         return f"{val:.0f}%"
     if col == 'Matchs_joues':
         return f"{val:.0f}"
-    return html.escape(str(val))
+    return str(val)
 
 
 def _table_html(df):
-    colonnes = list(df.columns)
-    entetes = ''.join(f'<th>{html.escape(str(c))}</th>' for c in colonnes)
-    lignes = []
-    for _, row in df.iterrows():
-        cellules = ''.join(f'<td>{_formater_cellule(c, row[c])}</td>' for c in colonnes)
-        lignes.append(f'<tr>{cellules}</tr>')
-    corps = ''.join(lignes)
-    return (
-        '<div class="mercato-table-wrap"><table class="mercato-table">'
-        f'<thead><tr>{entetes}</tr></thead><tbody>{corps}</tbody>'
-        '</table></div>'
-    )
+    return table_html(df, _formater_cellule)
 
 
 def afficher_mercato(df, cols_journees):
-    st.markdown(STYLE_MERCATO, unsafe_allow_html=True)
+    inject_style()
     st.header("🛒 Conseiller Mercato")
 
     # --- Sélecteur de taille de ligue ---
@@ -362,7 +267,7 @@ def afficher_mercato(df, cols_journees):
     if strategie_choisie == "⚠️ À éviter":
         st.subheader("⚠️ Joueurs chers mais décevants")
         st.markdown(
-            f'<p class="mercato-caption">Enchères affichées pour : {taille_choisie}</p>',
+            f'<p class="gs-caption">Enchères affichées pour : {taille_choisie}</p>',
             unsafe_allow_html=True
         )
         df_eviter['Raison'] = df_eviter.apply(lambda row:
@@ -380,7 +285,7 @@ def afficher_mercato(df, cols_journees):
     else:
         strategie_key, df_s = strategie_map[strategie_choisie]
         st.markdown(
-            f'<p class="mercato-caption">Enchères affichées pour : {taille_choisie}</p>',
+            f'<p class="gs-caption">Enchères affichées pour : {taille_choisie}</p>',
             unsafe_allow_html=True
         )
         postes = {
