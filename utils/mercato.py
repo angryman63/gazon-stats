@@ -215,17 +215,14 @@ def afficher_mercato(df, cols_journees):
 | 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
 """)
 
-    with st.expander("🔥 Légende tension marché"):
+    with st.expander("Légende popularité joueur"):
         st.markdown("""
-| Tension | % Achat T1 |
-|---|---|
-| 🔥🔥 Très demandé | 80% et plus |
-| 🔥 Demandé | 50% à 79% |
-| 😐 Modéré | 20% à 49% |
-| 🧊 Peu demandé | moins de 20% |
-
-La Tension est calculée sur le % Achat T1 toutes tailles de ligue confondues
-(échantillon plus large et plus fiable que par taille de ligue individuelle).
+| Tension |
+|---|
+| 🔥🔥 Très demandé |
+| 🔥 Demandé |
+| 😐 Modéré |
+| 🧊 Peu demandé |
 """)
 
     cols_affichage = ['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
