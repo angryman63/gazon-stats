@@ -3,184 +3,7 @@ import pandas as pd
 import numpy as np
 from modele import (get_joueur_info, poste_vers_ligne,
                     monte_carlo_match, get_stats_joueur_mc)
-
-# ─── Identité visuelle Maestro Tactico ───────────────────────────────────────
-MT_CSS = """
-<style>
-/* ── Palette ── */
-:root {
-    --mt-bg:        #0d0d0d;
-    --mt-card:      #1a1a1a;
-    --mt-or:        #c8a84b;
-    --mt-or-fonce:  #8a6f2e;
-    --mt-blanc:     #ffffff;
-    --mt-gris:      #555555;
-}
-
-/* ── Base ── */
-[data-testid="stAppViewContainer"] {
-    background-color: var(--mt-bg) !important;
-}
-[data-testid="stHeader"] {
-    background-color: #0d0d0d !important;
-}
-section[data-testid="stSidebar"] {
-    background-color: #141414 !important;
-}
-
-/* ── Titres ── */
-h1, h2, h3 {
-    color: var(--mt-blanc) !important;
-    letter-spacing: 0.05em;
-}
-
-/* ── Radio buttons ── */
-[data-testid="stRadio"] label {
-    color: var(--mt-blanc) !important;
-}
-[data-testid="stRadio"] [data-baseweb="radio"] div {
-    border-color: var(--mt-or) !important;
-}
-
-/* ── Text areas ── */
-[data-testid="stTextArea"] textarea,
-[data-testid="stTextInput"] input {
-    background-color: var(--mt-card) !important;
-    color: var(--mt-blanc) !important;
-    border: 1px solid #2a2a2a !important;
-    border-radius: 6px !important;
-}
-[data-testid="stTextArea"] textarea:focus,
-[data-testid="stTextInput"] input:focus {
-    border-color: var(--mt-or) !important;
-    box-shadow: 0 0 0 1px var(--mt-or) !important;
-}
-
-/* ── Labels ── */
-label, [data-testid="stWidgetLabel"] {
-    color: var(--mt-blanc) !important;
-}
-
-/* ── Multiselect ── */
-[data-baseweb="select"] {
-    background-color: var(--mt-card) !important;
-    border-color: #2a2a2a !important;
-}
-[data-baseweb="select"] [data-baseweb="tag"] {
-    background-color: var(--mt-or-fonce) !important;
-    color: var(--mt-blanc) !important;
-}
-
-/* ── Selectbox ── */
-[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-    background-color: var(--mt-card) !important;
-    color: var(--mt-blanc) !important;
-    border-color: #2a2a2a !important;
-}
-
-/* ── Bouton principal ── */
-[data-testid="stButton"] button[kind="primary"] {
-    background: linear-gradient(135deg, var(--mt-or), var(--mt-or-fonce)) !important;
-    color: #0d0d0d !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.06em !important;
-    border: none !important;
-    border-radius: 6px !important;
-    padding: 0.6rem 1.6rem !important;
-    transition: opacity 0.2s !important;
-}
-[data-testid="stButton"] button[kind="primary"]:hover {
-    opacity: 0.88 !important;
-}
-
-/* ── Colonnes équipe (cards) ── */
-[data-testid="column"] {
-    background-color: var(--mt-card);
-    border-radius: 8px;
-    border-left: 3px solid;
-    border-image: linear-gradient(to bottom, var(--mt-or), var(--mt-or-fonce)) 1;
-    padding: 12px 16px;
-}
-
-/* ── Métriques ── */
-[data-testid="stMetric"] {
-    background-color: var(--mt-card) !important;
-    border-radius: 8px;
-    padding: 12px 16px;
-    border-left: 3px solid var(--mt-or);
-}
-[data-testid="stMetricLabel"] {
-    color: var(--mt-gris) !important;
-    font-size: 0.78rem !important;
-    letter-spacing: 0.05em;
-}
-[data-testid="stMetricValue"] {
-    color: var(--mt-or) !important;
-    font-size: 2rem !important;
-    font-weight: 700 !important;
-}
-
-/* ── Success / Warning / Error / Info ── */
-[data-testid="stSuccess"] {
-    background-color: #0d1f0d !important;
-    border-left: 3px solid #4caf50 !important;
-    color: var(--mt-blanc) !important;
-    border-radius: 0 6px 6px 0;
-}
-[data-testid="stWarning"] {
-    background-color: var(--mt-card) !important;
-    border-left: 3px solid var(--mt-or) !important;
-    color: var(--mt-blanc) !important;
-    border-radius: 0 6px 6px 0;
-}
-[data-testid="stError"] {
-    background-color: #1f0d0d !important;
-    border-left: 3px solid #e53935 !important;
-    color: var(--mt-blanc) !important;
-    border-radius: 0 6px 6px 0;
-}
-[data-testid="stInfo"] {
-    background-color: var(--mt-card) !important;
-    border-left: 3px solid var(--mt-or) !important;
-    color: var(--mt-blanc) !important;
-    border-radius: 0 6px 6px 0;
-}
-
-/* ── Spinner ── */
-[data-testid="stSpinner"] p {
-    color: var(--mt-or) !important;
-}
-
-/* ── Séparateur ── */
-hr {
-    border: none;
-    border-top: 1px solid #2a2a2a !important;
-    margin: 1.5rem 0;
-}
-
-/* ── Texte général ── */
-p, li, span {
-    color: var(--mt-blanc) !important;
-}
-strong {
-    color: var(--mt-or) !important;
-}
-</style>
-"""
-
-def _separateur(titre):
-    """Filet fin avec titre centré en or — signature Maestro Tactico."""
-    st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem;">
-        <div style="flex:1;height:1px;background:linear-gradient(to right,#c8a84b,transparent);"></div>
-        <span style="color:#c8a84b;font-weight:700;letter-spacing:0.12em;font-size:0.82rem;white-space:nowrap;">
-            {titre}
-        </span>
-        <div style="flex:1;height:1px;background:linear-gradient(to left,#c8a84b,transparent);"></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
+from utils.table_style import inject_style, pill, escape
 
 liste_bonus = [
     "💼 Valise à Nanard — annule 1 but adverse",
@@ -232,20 +55,37 @@ def meilleure_compo(noms_joueurs, df, cols_journees, strategie):
 
     return equipe, remplacants
 
+def _roster_html(equipe, extra_badge_fn=None):
+    lignes_html = []
+    for ligne in ['GB', 'DEF', 'MIL', 'ATT']:
+        for j in equipe.get(ligne, []):
+            note = f"{j['note_pred']:.2f}" if j['note_pred'] else "?"
+            badges = ""
+            if j.get('alerte'):
+                badges += pill(j['alerte'], 'bad')
+            if j.get('clutch_7') is not None:
+                badges += pill(f"Clutch {j['clutch_7']*100:.0f}%", 'mid')
+            if extra_badge_fn:
+                extra = extra_badge_fn(j)
+                if extra:
+                    badges += pill(extra, 'warn')
+            lignes_html.append(
+                '<div class="gs-roster-row">'
+                f'<span class="gs-roster-ligne">{escape(ligne)}</span>'
+                f'<span class="gs-roster-nom">{escape(j["nom"])}</span>'
+                f'{badges}'
+                f'<span class="gs-roster-note">{note}</span>'
+                '</div>'
+            )
+    return f'<div class="gs-roster">{"".join(lignes_html)}</div>'
+
+
 def afficher_adversaire(df, cols_journees):
+    inject_style()
 
-    # Injection CSS identité visuelle
-    st.markdown(MT_CSS, unsafe_allow_html=True)
+    st.header("⚔️ Analyser mon adversaire")
 
-    # ── Titre principal ───────────────────────────────────────────────────────
-    st.markdown("""
-    <h1 style="color:#ffffff;letter-spacing:0.08em;margin-bottom:0.2rem;">
-        ⚔️ Analyser mon adversaire
-    </h1>
-    """, unsafe_allow_html=True)
-
-    _separateur("STRATÉGIE")
-
+    st.subheader("🎯 Votre stratégie")
     strategie_jeu = st.radio(
         "Choisissez votre stratégie :",
         ["🗡️ Offensive", "⚖️ Équilibrée", "🛡️ Défensive"],
@@ -260,12 +100,12 @@ def afficher_adversaire(df, cols_journees):
         key="mode_analyse"
     )
 
-    _separateur("COMPOSITIONS")
+    st.markdown("---")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<p style="color:#c8a84b;font-weight:700;letter-spacing:0.06em;">🔵 MON ÉQUIPE</p>', unsafe_allow_html=True)
+        st.subheader("🔵 Mon équipe")
         mes_titu = st.text_area(
             "Mes titulaires (un par ligne)",
             placeholder="Koffi\nBalerdi\nOkoh\nCoppola\nMoreira\nTolisso\nThomasson\nKebbal\nGreenwood\nBarcola\nThauvin",
@@ -280,7 +120,7 @@ def afficher_adversaire(df, cols_journees):
         )
 
     with col2:
-        st.markdown('<p style="color:#c8a84b;font-weight:700;letter-spacing:0.06em;">🔴 ÉQUIPE ADVERSE</p>', unsafe_allow_html=True)
+        st.subheader("🔴 Équipe adverse")
         if "précise" in mode_analyse:
             adv_titu = st.text_area(
                 "Titulaires adverses (un par ligne)",
@@ -302,12 +142,13 @@ def afficher_adversaire(df, cols_journees):
                 key="adv_joueurs"
             )
 
-    _separateur("CONFIGURATION DES BONUS")
+    st.markdown("---")
 
+    st.subheader("🎯 Configuration des bonus")
     col_b1, col_b2 = st.columns(2)
 
     with col_b1:
-        st.markdown('<p style="color:#c8a84b;font-weight:600;">Mes bonus encore disponibles</p>', unsafe_allow_html=True)
+        st.markdown("**Mes bonus encore disponibles**")
         mes_bonus_dispo = st.multiselect(
             "Cochez vos bonus disponibles :",
             liste_bonus,
@@ -327,7 +168,7 @@ def afficher_adversaire(df, cols_journees):
         )
 
     with col_b2:
-        st.markdown('<p style="color:#c8a84b;font-weight:600;">Bonus adverses</p>', unsafe_allow_html=True)
+        st.markdown("**Bonus adverses**")
         bonus_adv_utilises = st.multiselect(
             "Bonus encore disponibles chez l'adversaire :",
             liste_bonus,
@@ -339,7 +180,7 @@ def afficher_adversaire(df, cols_journees):
             key="bonus_adv_restant"
         )
 
-    _separateur("TERRAIN")
+    st.markdown("---")
 
     domicile = st.radio(
         "Vous jouez :",
@@ -348,7 +189,7 @@ def afficher_adversaire(df, cols_journees):
         key="domicile"
     ) == "🏠 À domicile"
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("---")
 
     if st.button("🚀 Lancer la simulation", type="primary"):
 
@@ -387,7 +228,7 @@ def afficher_adversaire(df, cols_journees):
         if non_trouves_adv:
             st.warning(f"⚠️ Joueurs non trouvés (adversaire) : {', '.join(non_trouves_adv)}")
 
-        # Convertir en format simulation
+        # Convertir en format Monte Carlo
         def equipe_vers_mc(equipe):
             joueurs_mc = []
             for ligne, joueurs in equipe.items():
@@ -422,7 +263,7 @@ def afficher_adversaire(df, cols_journees):
 
         bonus_adv_key = bonus_key_map.get(bonus_adv_restant, None)
 
-        # Simulation
+        # Simulation sans bonus
         with st.spinner("🔄 Simulation en cours (500 scénarios)..."):
             res_sb = monte_carlo_match(
                 joueurs_moi_mc, joueurs_adv_mc,
@@ -430,7 +271,7 @@ def afficher_adversaire(df, cols_journees):
                 domicile=domicile
             )
 
-        _separateur("📊 RÉSULTAT — 500 SCÉNARIOS")
+        st.subheader("📊 Résultat simulé — 500 scénarios")
 
         col_s1, col_s2, col_s3 = st.columns([2, 1, 2])
 
@@ -441,18 +282,19 @@ def afficher_adversaire(df, cols_journees):
 
         with col_s2:
             if res_sb['victoires'] > 50:
-                st.markdown('<p style="color:#c8a84b;font-size:1.4rem;font-weight:700;">🏆 Favori</p>', unsafe_allow_html=True)
+                st.markdown("### 🏆 Favori")
             elif res_sb['victoires'] > 40:
-                st.markdown('<p style="color:#c8a84b;font-size:1.4rem;font-weight:700;">⚖️ Serré</p>', unsafe_allow_html=True)
+                st.markdown("### ⚖️ Serré")
             else:
-                st.markdown('<p style="color:#555555;font-size:1.4rem;font-weight:700;">😢 Outsider</p>', unsafe_allow_html=True)
+                st.markdown("### 😢 Outsider")
 
         with col_s3:
             st.metric("Score moyen prévu",
                      f"{res_sb['score_moy_moi']} - {res_sb['score_moy_adv']}")
 
-        _separateur("🎖️ RECOMMANDATION CAPITAINE")
-
+        # Recommandation capitaine
+        st.markdown("---")
+        st.subheader("🎖️ Recommandation capitaine")
         candidats_cap = []
         for ligne, joueurs in equipe_moi.items():
             if ligne == 'GB':
@@ -476,10 +318,12 @@ def afficher_adversaire(df, cols_journees):
             meilleur_cap = max(candidats_cap, key=lambda x: x[3])
             st.success(f"🎖️ **{meilleur_cap[0]}** ({meilleur_cap[1]}) — Note prédite : {meilleur_cap[2]}")
 
-        _separateur("🎯 RECOMMANDATION MAESTRO TACTICO")
+        # Test automatique de tous les bonus
+        st.markdown("---")
+        st.subheader("🎯 Recommandation Gazon Stats")
 
         if mes_bonus_dispo:
-            st.markdown('<p style="color:#c8a84b;font-weight:600;">Impact de chaque bonus disponible :</p>', unsafe_allow_html=True)
+            st.markdown("**Impact de chaque bonus disponible :**")
 
             resultats_bonus = {}
             with st.spinner("🔄 Test des bonus en cours..."):
@@ -561,24 +405,16 @@ def afficher_adversaire(df, cols_journees):
         if "Miroir" in bonus_adv_restant:
             st.warning("🪞 **L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
 
-        _separateur("DÉTAILS DES ÉQUIPES")
-
+        # Détails équipes
+        st.markdown("---")
         col_eq1, col_eq2 = st.columns(2)
 
         with col_eq1:
-            st.markdown('<p style="color:#c8a84b;font-weight:700;letter-spacing:0.06em;">🔵 MON ÉQUIPE</p>', unsafe_allow_html=True)
-            for ligne in ['GB', 'DEF', 'MIL', 'ATT']:
-                for j in equipe_moi.get(ligne, []):
-                    note = f"{j['note_pred']:.2f}" if j['note_pred'] else "?"
-                    alerte = f" {j['alerte']}" if j['alerte'] else ""
-                    clutch = f" | Clutch: {j['clutch_7']*100:.0f}%"
-                    st.write(f"**{ligne}** | {j['nom']} — {note}{clutch}{alerte}")
+            st.subheader("🔵 Mon équipe")
+            st.markdown(_roster_html(equipe_moi), unsafe_allow_html=True)
 
         with col_eq2:
-            st.markdown('<p style="color:#c8a84b;font-weight:700;letter-spacing:0.06em;">🔴 ÉQUIPE ADVERSE</p>', unsafe_allow_html=True)
-            for ligne in ['GB', 'DEF', 'MIL', 'ATT']:
-                for j in equipe_adv.get(ligne, []):
-                    note = f"{j['note_pred']:.2f}" if j['note_pred'] else "?"
-                    alerte = f" {j['alerte']}" if j['alerte'] else ""
-                    rotaldo = " ⚠️ Rotaldo probable !" if not j['note_pred'] or j['note_pred'] < 3 else ""
-                    st.write(f"**{ligne}** | {j['nom']} — {note}{alerte}{rotaldo}")
+            st.subheader("🔴 Équipe adverse")
+            def _rotaldo(j):
+                return "⚠️ Rotaldo probable" if not j['note_pred'] or j['note_pred'] < 3 else None
+            st.markdown(_roster_html(equipe_adv, extra_badge_fn=_rotaldo), unsafe_allow_html=True)
