@@ -2,42 +2,36 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from modele import nettoyer_note, calculer_clutch, predire_note, alerte_blessure, etiquette_regularite, absences_consecutives
+from utils.table_style import inject_style, pill, dash, name_cell, table_html
 
-# ─── Identité visuelle Maestro Tactico (sans règles dataframe) ───────────────
-MT_CSS = """
-<style>
-[data-testid="stTabs"] [data-baseweb="tab-list"] {
-    border-bottom: 1px solid #2a2a2a;
-    gap: 4px;
-}
-[data-testid="stTabs"] [data-baseweb="tab"] {
-    color: #555555 !important;
-    background-color: transparent !important;
-    border-radius: 4px 4px 0 0;
-    padding: 8px 16px;
-    font-weight: 600;
-}
-[data-testid="stTabs"] [aria-selected="true"] {
-    color: #c8a84b !important;
-    border-bottom: 2px solid #c8a84b !important;
-    background-color: transparent !important;
-}
-[data-testid="stTabs"] [data-baseweb="tab"]:hover {
-    color: #c8a84b !important;
-}
-[data-testid="stExpander"] {
-    border-left: 3px solid #c8a84b !important;
-}
-[data-testid="stExpander"] summary {
-    color: #c8a84b !important;
-    font-weight: 600;
-}
-</style>
-"""
+
+def _pill_regularite(val):
+    val = '' if pd.isna(val) else str(val).strip()
+    if not val:
+        return dash()
+    if '🔴' in val:
+        return pill(val, 'bad')
+    if '🟠' in val or '🟡' in val:
+        return pill(val, 'warn')
+    if '🟢' in val:
+        return pill(val, 'good')
+    return pill(val, 'mid')
+
+
+def _formater_cellule_hebdo(col, val):
+    if col == 'Régularité':
+        return _pill_regularite(val)
+    if col == 'Joueur':
+        return name_cell(val)
+    if pd.isna(val):
+        return dash()
+    if col in ('Note saison', 'Forme 6J'):
+        return f"{val:.2f}"
+    return str(val)
+
 
 def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
-
-    st.markdown(MT_CSS, unsafe_allow_html=True)
+    inject_style()
 
     scores = []
     for idx, row in df.iterrows():
@@ -77,15 +71,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
-    st.markdown("""
-    <div style="display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem;">
-        <div style="flex:1;height:1px;background:linear-gradient(to right,#c8a84b,transparent);"></div>
-        <span style="color:#c8a84b;font-weight:700;letter-spacing:0.12em;font-size:0.85rem;white-space:nowrap;">
-            🏆 RECOMMANDATIONS PAR POSTE
-        </span>
-        <div style="flex:1;height:1px;background:linear-gradient(to left,#c8a84b,transparent);"></div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.header("🏆 Recommandations par poste")
 
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
@@ -109,7 +95,10 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
                 ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
             ]
             if len(top) > 0:
-                st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
+                st.markdown(
+                    table_html(top.reset_index(drop=True), _formater_cellule_hebdo),
+                    unsafe_allow_html=True
+                )
             else:
                 st.warning("⚠️ Aucun joueur trouvé — vérifiez l'orthographe")
     else:
@@ -128,6 +117,9 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
                 '_score', ascending=False
             )[colonnes_affichage]
             if len(top) > 0:
-                st.dataframe(top.reset_index(drop=True), use_container_width=True, height=500)
+                st.markdown(
+                    table_html(top.reset_index(drop=True), _formater_cellule_hebdo),
+                    unsafe_allow_html=True
+                )
             else:
                 st.info("Aucun joueur disponible pour ce poste")
