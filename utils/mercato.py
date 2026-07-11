@@ -215,9 +215,9 @@ def afficher_mercato(df, cols_journees):
 | 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
 """)
 
-    with st.expander("Légende popularité joueur"):
+    with st.expander("Légende demande joueur"):
         st.markdown("""
-| Tension |
+| Demande |
 |---|
 | 🔥🔥 Très demandé |
 | 🔥 Demandé |
@@ -248,7 +248,7 @@ def afficher_mercato(df, cols_journees):
         st.dataframe(
             df_eviter[['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
                        'Note', 'Matchs_joues', '%Titu', 'Alerte', 'Raison']
-                       ].rename(columns={'Enchere': 'Enchère moy.'}).reset_index(drop=True),
+                       ].rename(columns={'Enchere': 'Enchère moy.', 'Tension': 'Demande'}).reset_index(drop=True),
             width='stretch',
             height=400
         )
@@ -284,7 +284,7 @@ def afficher_mercato(df, cols_journees):
                 if len(top) > 0:
                     st.dataframe(
                         top[cols_affichage + ['Clutch']
-                            ].rename(columns={'Enchere': 'Enchère moy.'}).reset_index(drop=True),
+                            ].rename(columns={'Enchere': 'Enchère moy.', 'Tension': 'Demande'}).reset_index(drop=True),
                         width='stretch',
                         height=400
                     )
