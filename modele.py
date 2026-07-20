@@ -60,13 +60,13 @@ def alerte_blessure(row, cols_journees):
 
 def etiquette_regularite(valeur, q10, q50, q80):
     if valeur >= q80:
-        return "1 💎 Béton"
+        return "Métronome"
     elif valeur >= q50:
-        return "2 👌 Fiable"
+        return "Régulier"
     elif valeur >= q10:
-        return "3 ⚠️ Capricieux"
+        return "Irrégulier"
     else:
-        return "4 🐐 Rotaldo"
+        return "Rotaldo"
 
 def get_joueur_info(nom_joueur, df, cols_journees):
     row = df[df['Joueur'].str.lower() == nom_joueur.strip().lower()]
@@ -171,7 +171,7 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
         elif bonus_moi == 'chapron':
             meilleur_nom = None
             meilleur_note = -1
-            for k, v in notes_adv.items():
+            for k, v in notes_moi.items():
                 if v['ligne'] != 'GB' and v['note'] > meilleur_note:
                     meilleur_note = v['note']
                     meilleur_nom = k
@@ -193,7 +193,7 @@ def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
         elif bonus_adv == 'chapron':
             meilleur_nom = None
             meilleur_note = -1
-            for k, v in notes_moi.items():
+            for k, v in notes_adv.items():
                 if v['ligne'] != 'GB' and v['note'] > meilleur_note:
                     meilleur_note = v['note']
                     meilleur_nom = k
