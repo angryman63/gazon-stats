@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from modele import (get_joueur_info, poste_vers_ligne,
                     monte_carlo_match, get_stats_joueur_mc)
-from utils.table_style import inject_style, pill, escape
+from utils.table_style import inject_style, pill, escape, separateur
 
 liste_bonus = [
     "💼 Valise à Nanard — annule 1 but adverse",
@@ -85,16 +85,16 @@ def afficher_adversaire(df, cols_journees):
 
     st.header("Analyser mon adversaire")
 
-    st.subheader("Stratégie")
+    separateur("STRATÉGIE")
     strategie_jeu = st.radio(
-        "Stratégie de jeu :",
+        "Stratégie de jeu",
         ["Offensive", "Équilibrée", "Défensive"],
         horizontal=True,
         key="strategie_jeu"
     )
 
     mode_analyse = st.radio(
-        "Mode d'analyse :",
+        "Mode d'analyse",
         ["Analyse préventive (avant match)", "Analyse précise (compo connue)"],
         horizontal=True,
         key="mode_analyse"
@@ -144,13 +144,13 @@ def afficher_adversaire(df, cols_journees):
 
     st.markdown("---")
 
-    st.subheader("Configuration des bonus")
+    separateur("CONFIGURATION DES BONUS")
     col_b1, col_b2 = st.columns(2)
 
     with col_b1:
         st.markdown("**Bonus disponibles**")
         mes_bonus_dispo = st.multiselect(
-            "Sélectionner les bonus disponibles :",
+            "Bonus disponibles",
             liste_bonus,
             key="mes_bonus_dispo"
         )
@@ -161,7 +161,7 @@ def afficher_adversaire(df, cols_journees):
                 key="joueur_uber"
             )
         importance_match = st.radio(
-            "Importance du match :",
+            "Importance du match",
             ["Crucial", "Normal", "Sans enjeu"],
             horizontal=True,
             key="importance"
@@ -170,12 +170,12 @@ def afficher_adversaire(df, cols_journees):
     with col_b2:
         st.markdown("**Bonus adverses**")
         bonus_adv_utilises = st.multiselect(
-            "Bonus encore disponibles chez l'adversaire :",
+            "Bonus adverses disponibles",
             liste_bonus,
             key="bonus_adv_utilises"
         )
         bonus_adv_restant = st.selectbox(
-            "Bonus adverse redouté ce match :",
+            "Bonus adverse redouté",
             ["Aucun"] + liste_bonus,
             key="bonus_adv_restant"
         )
@@ -183,13 +183,17 @@ def afficher_adversaire(df, cols_journees):
     st.markdown("---")
 
     domicile = st.radio(
-        "Terrain :",
+        "Terrain",
         ["Domicile", "Extérieur"],
         horizontal=True,
         key="domicile"
     ) == "Domicile"
 
     st.markdown("---")
+
+    separateur("TERRAIN")
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     if st.button("Lancer la simulation", type="primary"):
 
@@ -271,7 +275,7 @@ def afficher_adversaire(df, cols_journees):
                 domicile=domicile
             )
 
-        st.subheader("Résultat simulé — 500 scénarios")
+        separateur("RÉSULTAT — 500 SCÉNARIOS")
 
         col_s1, col_s2, col_s3 = st.columns([2, 1, 2])
 
@@ -294,7 +298,7 @@ def afficher_adversaire(df, cols_journees):
 
         # Recommandation capitaine
         st.markdown("---")
-        st.subheader("Recommandation capitaine")
+        separateur("RECOMMANDATION CAPITAINE")
         candidats_cap = []
         for ligne, joueurs in equipe_moi.items():
             if ligne == 'GB':
@@ -320,7 +324,7 @@ def afficher_adversaire(df, cols_journees):
 
         # Test automatique de tous les bonus
         st.markdown("---")
-        st.subheader("Recommandation Maestro Tactico")
+        separateur("RECOMMANDATION MAESTRO TACTICO")
 
         if mes_bonus_dispo:
             st.markdown("**Impact de chaque bonus disponible :**")
