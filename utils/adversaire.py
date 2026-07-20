@@ -100,8 +100,6 @@ def afficher_adversaire(df, cols_journees):
         key="mode_analyse"
     )
 
-    st.markdown("---")
-
     col1, col2 = st.columns(2)
 
     with col1:
@@ -141,8 +139,6 @@ def afficher_adversaire(df, cols_journees):
                 height=400,
                 key="adv_joueurs"
             )
-
-    st.markdown("---")
 
     separateur("CONFIGURATION DES BONUS")
     col_b1, col_b2 = st.columns(2)
@@ -192,8 +188,6 @@ def afficher_adversaire(df, cols_journees):
     st.markdown("---")
 
     separateur("TERRAIN")
-
-    st.markdown("<br>", unsafe_allow_html=True)
 
     if st.button("Lancer la simulation", type="primary"):
 
@@ -410,7 +404,7 @@ def afficher_adversaire(df, cols_journees):
             st.warning("**L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
 
         # Détails équipes
-        st.markdown("---")
+        separateur("DÉTAILS DES ÉQUIPES")
         col_eq1, col_eq2 = st.columns(2)
 
         with col_eq1:
