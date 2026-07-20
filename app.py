@@ -315,8 +315,7 @@ with st.sidebar:
     st.markdown("---")
 
 # ============================================================
-# URL GITHUB — FICHIER JOUEURS FUSIONNÉ (généré automatiquement
-# par la GitHub Action à chaque dépôt des 3 fichiers 6/8/10)
+# URL GITHUB — FICHIER JOUEURS FUSIONNÉ
 # ============================================================
 
 GITHUB_URL = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/joueurs_fusionne.xlsx"
@@ -379,11 +378,25 @@ for col in cols_journees:
 
 with st.sidebar:
     st.markdown("### Mes joueurs")
+
+    # Initialisation session state
+    if "mes_joueurs_input" not in st.session_state:
+        st.session_state["mes_joueurs_input"] = ""
+
     mes_joueurs_input = st.text_area(
-        "Entrez vos joueurs (un par ligne)",
+        "Joueurs (un par ligne)",
+        value=st.session_state["mes_joueurs_input"],
         placeholder="Greenwood\nBarcola\nTolisso",
-        height=150
+        height=150,
+        key="mes_joueurs_textarea"
     )
+
+    if st.button("Valider", key="btn_valider_joueurs"):
+        st.session_state["mes_joueurs_input"] = st.session_state["mes_joueurs_textarea"]
+        st.rerun()
+    else:
+        st.session_state["mes_joueurs_input"] = mes_joueurs_input
+
     filtrer = st.checkbox("Afficher uniquement mes joueurs", value=False)
     st.markdown("---")
     st.markdown(
@@ -408,7 +421,7 @@ with page0:
     afficher_accueil()
 
 with page1:
-    afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer)
+    afficher_hebdo(df, cols_journees, st.session_state["mes_joueurs_input"], filtrer)
 
 with page2:
     afficher_mercato(df, cols_journees)
