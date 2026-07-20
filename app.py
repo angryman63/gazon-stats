@@ -347,14 +347,10 @@ def charger_depuis_github(url: str):
 # LOGIQUE PRINCIPALE
 # ============================================================
 
-# Placeholder pour afficher la page d'accueil pendant le chargement
 placeholder = st.empty()
-
-# Vérifier si les données sont déjà en cache (première fois = False)
 donnees_chargees = "df_joueurs" in st.session_state
 
 if not donnees_chargees:
-    # Afficher la page d'accueil avec indicateur de chargement
     with placeholder.container():
         afficher_accueil()
         barre = st.progress(0, text="Connexion à la base joueurs…")
@@ -367,16 +363,15 @@ if not donnees_chargees:
         st.session_state["df_joueurs"] = df_raw
     except ValueError as e:
         placeholder.empty()
-        st.error(f"⚠️ Erreur lors de la fusion des fichiers joueurs : {e}")
+        st.error(f"Erreur lors de la fusion des fichiers joueurs : {e}")
         st.stop()
     except Exception as e:
         placeholder.empty()
-        st.error(f"⚠️ Impossible de charger la base joueurs depuis GitHub. Vérifiez votre connexion ou contactez le support.")
+        st.error(f"Impossible de charger la base joueurs depuis GitHub. Vérifiez votre connexion ou contactez le support.")
         st.stop()
 
     placeholder.empty()
 
-# Charger depuis session_state
 df = st.session_state["df_joueurs"]
 
 # ============================================================
@@ -394,7 +389,7 @@ for col in cols_journees:
 # ============================================================
 
 with st.sidebar:
-    st.markdown("### 📋 Mes joueurs")
+    st.markdown("### Mes joueurs")
     mes_joueurs_input = st.text_area(
         "Entrez vos joueurs (un par ligne)",
         placeholder="Greenwood\nBarcola\nTolisso",
@@ -414,10 +409,10 @@ with st.sidebar:
 # ============================================================
 
 page0, page1, page2, page3 = st.tabs([
-    "🏠 Accueil",
-    "🏆 Conseiller hebdo",
-    "🛒 Mercato",
-    "⚔️ Simuler le match"
+    "Accueil",
+    "Conseiller hebdo",
+    "Mercato",
+    "Simuler le match"
 ])
 
 with page0:
