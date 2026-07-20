@@ -4,46 +4,99 @@ def afficher_accueil():
 
     st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Raleway:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Raleway:wght@400;500;600&display=swap');
 
 .hero-wrap {
     width: 100%;
     text-align: center;
-    padding: 48px 0 40px 0;
+    padding: 48px 0 32px 0;
 }
 .hero-title {
     font-family: "Oswald", sans-serif; font-size: 38px; font-weight: 700;
-    color: #ffffff; line-height: 1.1; margin: 0 0 20px 0;
+    color: #ffffff; line-height: 1.1; margin: 0 0 16px 0;
 }
 .hero-title span { color: #c8a84b; }
 .hero-subtitle {
     font-family: "Raleway", sans-serif; font-size: 16px; color: #aaaaaa;
-    line-height: 1.7; margin: 0 auto 48px auto;
+    line-height: 1.7; margin: 0 auto 12px auto; text-align: center;
 }
+.hero-sep {
+    width: 120px; height: 1px;
+    background: linear-gradient(to right, transparent, #c8a84b, transparent);
+    margin: 0 auto 36px auto;
+}
+
+/* ── Cartes fonctionnalités ── */
 .feat-card {
-    background-color: #1a1a1a; border: 1px solid #2a2a2a;
-    border-radius: 14px; padding: 36px 28px; height: 100%;
+    background-color: #1e1e1e;
+    border: 1px solid rgba(200, 168, 75, 0.2);
+    border-radius: 14px; padding: 32px 24px; height: 100%;
+    transition: border-color 0.2s ease;
+}
+.feat-card:hover {
+    border-color: rgba(200, 168, 75, 0.55);
 }
 .feat-name {
     font-family: "Oswald", sans-serif; font-size: 17px; font-weight: 700;
-    color: #c8a84b; letter-spacing: 0.5px; margin-bottom: 14px;
+    color: #c8a84b; letter-spacing: 0.5px; margin-bottom: 12px;
 }
-.feat-badge {
-    display: inline-block; font-family: "Raleway", sans-serif;
-    font-size: 10px; font-weight: 700; padding: 3px 10px;
-    border-radius: 20px; margin-bottom: 18px; letter-spacing: 0.8px; text-transform: uppercase;
-}
-.badge-free  { background-color: #252525; color: #c0c0c0; border: 1px solid #c0c0c066; }
-.badge-premium { background-color: #2a1f0a; color: #c8a84b; border: 1px solid #c8a84b88; }
 .feat-desc {
     font-family: "Raleway", sans-serif; font-size: 14px;
     color: #888888; line-height: 1.75; margin: 0;
+}
+
+/* ── Comment ça marche ── */
+.how-wrap {
+    max-width: 860px;
+    margin: 48px auto 0 auto;
+    padding: 0 8px;
+}
+.how-title {
+    font-family: "Oswald", sans-serif; font-size: 18px; font-weight: 700;
+    color: #ffffff; letter-spacing: 1px; text-align: center;
+    margin-bottom: 28px; text-transform: uppercase;
+}
+.how-steps {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+.how-step {
+    flex: 1;
+    background-color: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 24px 20px;
+    text-align: center;
+}
+.how-num {
+    font-family: "Oswald", sans-serif; font-size: 28px; font-weight: 700;
+    color: #c8a84b; line-height: 1; margin-bottom: 10px;
+}
+.how-text {
+    font-family: "Raleway", sans-serif; font-size: 13px;
+    color: #888888; line-height: 1.6;
+}
+
+/* ── Bandeau crédibilité ── */
+.credibility {
+    text-align: center;
+    margin: 40px auto 0 auto;
+    padding: 16px 24px;
+    max-width: 600px;
+    border-top: 1px solid #2a2a2a;
+}
+.credibility p {
+    font-family: "Raleway", sans-serif; font-size: 13px;
+    color: #555555; line-height: 1.6; margin: 0;
+    font-style: italic;
 }
 </style>
 
 <div class="hero-wrap">
   <h1 class="hero-title">Le coach que vos adversaires <span>n\'ont pas</span></h1>
-  <div style="font-family:Raleway,sans-serif; font-size:16px; color:#aaaaaa; line-height:1.7; margin:0 auto 48px auto; text-align:center; width:100%;">Recommandations hebdo, strat\u00e9gie mercato, analyse de vos adversaires.</div>
+  <div class="hero-subtitle">Recommandations hebdo, strat\u00e9gie mercato, analyse de vos adversaires.</div>
+  <div class="hero-sep"></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -61,7 +114,7 @@ def afficher_accueil():
         st.markdown("""
 <div class="feat-card">
   <div class="feat-name">Conseiller Mercato</div>
-  <p class="feat-desc">Trouver les joueurs \u00e0 acheter selon le budget et la strat\u00e9gie \u2014 Stars, Valeurs s\u00fbres, P\u00e9pites ou joueurs \u00e0 \u00e9viter.</p>
+  <p class="feat-desc">Le bon joueur, au bon prix.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -70,5 +123,28 @@ def afficher_accueil():
 <div class="feat-card">
   <div class="feat-name">Simuler le match</div>
   <p class="feat-desc">Pr\u00e9parer chaque match comme un pro.</p>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="how-wrap">
+  <div class="how-title">Comment \u00e7a marche</div>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-num">1</div>
+      <div class="how-text">Renseigner ses joueurs dans le panneau gauche</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">2</div>
+      <div class="how-text">Recevoir les recommandations adapt\u00e9es \u00e0 chaque situation</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">3</div>
+      <div class="how-text">Prendre les bonnes d\u00e9cisions et gagner sa ligue</div>
+    </div>
+  </div>
+  <div class="credibility">
+    <p>Des analyses bas\u00e9es sur les donn\u00e9es r\u00e9elles de la saison, mises \u00e0 jour chaque semaine.</p>
+  </div>
 </div>
 """, unsafe_allow_html=True)
