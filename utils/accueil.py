@@ -6,7 +6,10 @@ def afficher_accueil():
 .hero-wrap {
     width: 100%;
     text-align: center;
-    padding: 48px 0 40px 0;
+    padding: 24px 0 32px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .hero-logo-big {
     display: inline-flex; align-items: center; justify-content: center;
@@ -71,7 +74,6 @@ def afficher_accueil():
         st.markdown("""
 <div class="feat-card">
   <div class="feat-name">Conseiller Hebdo</div>
-  <span class="feat-badge badge-free">Gratuit</span>
   <p class="feat-desc">La meilleure compo possible \u00e0 chaque match.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -79,7 +81,6 @@ def afficher_accueil():
         st.markdown("""
 <div class="feat-card">
   <div class="feat-name">Conseiller Mercato</div>
-  <span class="feat-badge badge-premium">Premium</span>
   <p class="feat-desc">Le bon joueur, au bon prix.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -87,7 +88,6 @@ def afficher_accueil():
         st.markdown("""
 <div class="feat-card">
   <div class="feat-name">Simuler le match</div>
-  <span class="feat-badge badge-premium">Premium</span>
   <p class="feat-desc">Le match est d\u00e9j\u00e0 jou\u00e9.</p>
 </div>
 """, unsafe_allow_html=True)
