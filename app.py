@@ -303,20 +303,20 @@ hr {
 # ============================================================
 
 LOGO_HTML = """
-<div style="display:flex; align-items:center; gap:14px; padding:8px 4px;">
+<div style="display:flex; align-items:center; gap:12px; padding:6px 4px;">
   <div style="
-      width:52px; height:52px; border-radius:50%;
+      width:40px; height:40px; border-radius:50%;
       border:2px solid #c8a84b;
       background:#0d0d0d;
       display:flex; flex-direction:column;
       align-items:center; justify-content:center;
       flex-shrink:0;">
-    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px; color:#c8a84b; letter-spacing:2px; line-height:1;">MT</span>
-    <div style="width:30px; height:1px; background:#c8a84b; opacity:0.55; margin:4px 0;"></div>
-    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:6px; color:#c8a84b; letter-spacing:3px; opacity:0.85; line-height:1;">TACTICO</span>
+    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:11px; color:#c8a84b; letter-spacing:1.5px; line-height:1;">MT</span>
+    <div style="width:22px; height:1px; background:#c8a84b; opacity:0.55; margin:3px 0;"></div>
+    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:5px; color:#c8a84b; letter-spacing:2px; opacity:0.85; line-height:1;">TACTICO</span>
   </div>
   <div>
-    <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; color:#ffffff; letter-spacing:1px;">MAESTRO TACTICO</div>
+    <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px; color:#ffffff; letter-spacing:1px;">MAESTRO TACTICO</div>
   </div>
 </div>
 """
