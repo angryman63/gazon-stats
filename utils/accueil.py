@@ -1,33 +1,15 @@
 import streamlit as st
+
 def afficher_accueil():
+
     st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Raleway:wght@400;500&display=swap');
+
 .hero-wrap {
     width: 100%;
     text-align: center;
-    padding: 24px 0 32px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.hero-logo-big {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 120px; height: 120px; border-radius: 50%;
-    border: 3px solid #c8a84b; background-color: #0d0d0d;
-    margin: 0 auto 36px auto; flex-direction: column;
-}
-.hero-logo-big .mt {
-    font-family: "Oswald", sans-serif; font-weight: 700;
-    font-size: 28px; color: #c8a84b; letter-spacing: 2px; line-height: 1;
-}
-.hero-logo-big .sep {
-    width: 64px; height: 1px; background-color: #c8a84b;
-    opacity: 0.55; margin: 5px auto;
-}
-.hero-logo-big .tactico {
-    font-family: "Oswald", sans-serif; font-weight: 700;
-    font-size: 10px; color: #c8a84b; letter-spacing: 4px; opacity: 0.85; line-height: 1;
+    padding: 48px 0 40px 0;
 }
 .hero-title {
     font-family: "Oswald", sans-serif; font-size: 38px; font-weight: 700;
@@ -42,7 +24,6 @@ def afficher_accueil():
     background-color: #1a1a1a; border: 1px solid #2a2a2a;
     border-radius: 14px; padding: 36px 28px; height: 100%;
 }
-.feat-emoji { font-size: 32px; margin-bottom: 18px; display: block; }
 .feat-name {
     font-family: "Oswald", sans-serif; font-size: 17px; font-weight: 700;
     color: #c8a84b; letter-spacing: 0.5px; margin-bottom: 14px;
@@ -59,35 +40,35 @@ def afficher_accueil():
     color: #888888; line-height: 1.75; margin: 0;
 }
 </style>
+
 <div class="hero-wrap">
-  <div class="hero-logo-big">
-    <span class="mt">MT</span>
-    <div class="sep"></div>
-    <span class="tactico">TACTICO</span>
-  </div>
   <h1 class="hero-title">Le coach que vos adversaires <span>n\'ont pas</span></h1>
-  <div style="font-family:Raleway,sans-serif; font-size:16px; color:#aaaaaa; line-height:1.7; margin:0 auto 48px auto; text-align:center; width:100%;">Recommandations hebdo, stratégie mercato, analyse de vos adversaires.</div>
+  <div style="font-family:Raleway,sans-serif; font-size:16px; color:#aaaaaa; line-height:1.7; margin:0 auto 48px auto; text-align:center; width:100%;">Recommandations hebdo, strat\u00e9gie mercato, analyse de vos adversaires.</div>
 </div>
 """, unsafe_allow_html=True)
+
     col1, col2, col3 = st.columns(3)
+
     with col1:
         st.markdown("""
 <div class="feat-card">
   <div class="feat-name">Conseiller Hebdo</div>
-  <p class="feat-desc">La meilleure compo possible \u00e0 chaque match.</p>
+  <p class="feat-desc">Le bon choix pour aligner les meilleurs joueurs de la semaine.</p>
 </div>
 """, unsafe_allow_html=True)
+
     with col2:
         st.markdown("""
 <div class="feat-card">
   <div class="feat-name">Conseiller Mercato</div>
-  <p class="feat-desc">Le bon joueur, au bon prix.</p>
+  <p class="feat-desc">Trouver les joueurs \u00e0 acheter selon le budget et la strat\u00e9gie \u2014 Stars, Valeurs s\u00fbres, P\u00e9pites ou joueurs \u00e0 \u00e9viter.</p>
 </div>
 """, unsafe_allow_html=True)
+
     with col3:
         st.markdown("""
 <div class="feat-card">
   <div class="feat-name">Simuler le match</div>
-  <p class="feat-desc">Le match est d\u00e9j\u00e0 jou\u00e9.</p>
+  <p class="feat-desc">Pr\u00e9parer chaque match comme un pro.</p>
 </div>
 """, unsafe_allow_html=True)
