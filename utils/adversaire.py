@@ -35,9 +35,9 @@ def meilleure_compo(noms_joueurs, df, cols_journees, strategie):
         if info and info['note_pred'] is not None:
             joueurs_info.append(info)
 
-    if strategie == "🗡️ Offensive":
+    if strategie == "Offensive":
         joueurs_info.sort(key=lambda x: x['clutch_7'], reverse=True)
-    elif strategie == "🛡️ Défensive":
+    elif strategie == "Défensive":
         joueurs_info.sort(key=lambda x: x['regularite'], reverse=True)
     else:
         joueurs_info.sort(key=lambda x: x['note_pred'] or 0, reverse=True)
@@ -83,19 +83,19 @@ def _roster_html(equipe, extra_badge_fn=None):
 def afficher_adversaire(df, cols_journees):
     inject_style()
 
-    st.header("⚔️ Analyser mon adversaire")
+    st.header("Analyser mon adversaire")
 
-    st.subheader("🎯 Votre stratégie")
+    st.subheader("Stratégie")
     strategie_jeu = st.radio(
-        "Choisissez votre stratégie :",
-        ["🗡️ Offensive", "⚖️ Équilibrée", "🛡️ Défensive"],
+        "Stratégie de jeu :",
+        ["Offensive", "Équilibrée", "Défensive"],
         horizontal=True,
         key="strategie_jeu"
     )
 
     mode_analyse = st.radio(
         "Mode d'analyse :",
-        ["🔮 Analyse préventive (avant match)", "🎯 Analyse précise (compo connue)"],
+        ["Analyse préventive (avant match)", "Analyse précise (compo connue)"],
         horizontal=True,
         key="mode_analyse"
     )
@@ -105,22 +105,22 @@ def afficher_adversaire(df, cols_journees):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("🔵 Mon équipe")
+        st.subheader("Mon équipe")
         mes_titu = st.text_area(
-            "Mes titulaires (un par ligne)",
+            "Titulaires (un par ligne)",
             placeholder="Koffi\nBalerdi\nOkoh\nCoppola\nMoreira\nTolisso\nThomasson\nKebbal\nGreenwood\nBarcola\nThauvin",
             height=250,
             key="mes_titu"
         )
         mes_remplacants = st.text_area(
-            "Mes remplaçants (un par ligne)",
+            "Remplaçants (un par ligne)",
             placeholder="Safonov\nGradit\nRongier\nFofana",
             height=150,
             key="mes_rempl"
         )
 
     with col2:
-        st.subheader("🔴 Équipe adverse")
+        st.subheader("Équipe adverse")
         if "précise" in mode_analyse:
             adv_titu = st.text_area(
                 "Titulaires adverses (un par ligne)",
@@ -144,13 +144,13 @@ def afficher_adversaire(df, cols_journees):
 
     st.markdown("---")
 
-    st.subheader("🎯 Configuration des bonus")
+    st.subheader("Configuration des bonus")
     col_b1, col_b2 = st.columns(2)
 
     with col_b1:
-        st.markdown("**Mes bonus encore disponibles**")
+        st.markdown("**Bonus disponibles**")
         mes_bonus_dispo = st.multiselect(
-            "Cochez vos bonus disponibles :",
+            "Sélectionner les bonus disponibles :",
             liste_bonus,
             key="mes_bonus_dispo"
         )
@@ -162,7 +162,7 @@ def afficher_adversaire(df, cols_journees):
             )
         importance_match = st.radio(
             "Importance du match :",
-            ["🔥 Crucial", "⚽ Normal", "😴 Sans enjeu"],
+            ["Crucial", "Normal", "Sans enjeu"],
             horizontal=True,
             key="importance"
         )
@@ -175,7 +175,7 @@ def afficher_adversaire(df, cols_journees):
             key="bonus_adv_utilises"
         )
         bonus_adv_restant = st.selectbox(
-            "Bonus adverse que vous craignez ce match :",
+            "Bonus adverse redouté ce match :",
             ["Aucun"] + liste_bonus,
             key="bonus_adv_restant"
         )
@@ -183,15 +183,15 @@ def afficher_adversaire(df, cols_journees):
     st.markdown("---")
 
     domicile = st.radio(
-        "Vous jouez :",
-        ["🏠 À domicile", "✈️ À l'extérieur"],
+        "Terrain :",
+        ["Domicile", "Extérieur"],
         horizontal=True,
         key="domicile"
-    ) == "🏠 À domicile"
+    ) == "Domicile"
 
     st.markdown("---")
 
-    if st.button("🚀 Lancer la simulation", type="primary"):
+    if st.button("Lancer la simulation", type="primary"):
 
         def construire_equipe_noms(noms_titu):
             titu_info = []
@@ -224,9 +224,9 @@ def afficher_adversaire(df, cols_journees):
 
         # Alertes joueurs non trouvés
         if non_trouves_moi:
-            st.warning(f"⚠️ Joueurs non trouvés (mon équipe) : {', '.join(non_trouves_moi)}")
+            st.warning(f"Joueurs non trouvés (mon équipe) : {', '.join(non_trouves_moi)}")
         if non_trouves_adv:
-            st.warning(f"⚠️ Joueurs non trouvés (adversaire) : {', '.join(non_trouves_adv)}")
+            st.warning(f"Joueurs non trouvés (adversaire) : {', '.join(non_trouves_adv)}")
 
         # Convertir en format Monte Carlo
         def equipe_vers_mc(equipe):
@@ -264,29 +264,29 @@ def afficher_adversaire(df, cols_journees):
         bonus_adv_key = bonus_key_map.get(bonus_adv_restant, None)
 
         # Simulation sans bonus
-        with st.spinner("🔄 Simulation en cours (500 scénarios)..."):
+        with st.spinner("Simulation en cours (500 scénarios)..."):
             res_sb = monte_carlo_match(
                 joueurs_moi_mc, joueurs_adv_mc,
                 n_simulations=500,
                 domicile=domicile
             )
 
-        st.subheader("📊 Résultat simulé — 500 scénarios")
+        st.subheader("Résultat simulé — 500 scénarios")
 
         col_s1, col_s2, col_s3 = st.columns([2, 1, 2])
 
         with col_s1:
-            st.metric("🏆 Victoire", f"{res_sb['victoires']}%")
-            st.metric("🤝 Nul", f"{res_sb['nuls']}%")
-            st.metric("😢 Défaite", f"{res_sb['defaites']}%")
+            st.metric("Victoire", f"{res_sb['victoires']}%")
+            st.metric("Nul", f"{res_sb['nuls']}%")
+            st.metric("Défaite", f"{res_sb['defaites']}%")
 
         with col_s2:
             if res_sb['victoires'] > 50:
-                st.markdown("### 🏆 Favori")
+                st.markdown("### Favori")
             elif res_sb['victoires'] > 40:
-                st.markdown("### ⚖️ Serré")
+                st.markdown("### Serré")
             else:
-                st.markdown("### 😢 Outsider")
+                st.markdown("### Outsider")
 
         with col_s3:
             st.metric("Score moyen prévu",
@@ -294,16 +294,16 @@ def afficher_adversaire(df, cols_journees):
 
         # Recommandation capitaine
         st.markdown("---")
-        st.subheader("🎖️ Recommandation capitaine")
+        st.subheader("Recommandation capitaine")
         candidats_cap = []
         for ligne, joueurs in equipe_moi.items():
             if ligne == 'GB':
                 continue
             for j in joueurs:
                 if j['note_pred'] is not None:
-                    if strategie_jeu == "🗡️ Offensive":
+                    if strategie_jeu == "Offensive":
                         score_cap = j['clutch_7']*0.6 + (j['note_pred']/10)*0.4
-                    elif strategie_jeu == "🛡️ Défensive":
+                    elif strategie_jeu == "Défensive":
                         score_cap = j['regularite']*0.6 + (j['note_pred']/10)*0.4
                     else:
                         score_cap = (j['note_pred']/10)*0.5 + j['regularite']*0.3 + j['clutch_7']*0.2
@@ -311,22 +311,22 @@ def afficher_adversaire(df, cols_journees):
 
         if equipe_moi.get('GB') and equipe_moi['GB']:
             gb = equipe_moi['GB'][0]
-            if gb.get('clutch_8', 0) >= 0.10 and strategie_jeu == "🛡️ Défensive":
+            if gb.get('clutch_8', 0) >= 0.10 and strategie_jeu == "Défensive":
                 candidats_cap.append((gb['nom'], 'G', gb['note_pred'], 999))
 
         if candidats_cap:
             meilleur_cap = max(candidats_cap, key=lambda x: x[3])
-            st.success(f"🎖️ **{meilleur_cap[0]}** ({meilleur_cap[1]}) — Note prédite : {meilleur_cap[2]}")
+            st.success(f"**{meilleur_cap[0]}** ({meilleur_cap[1]}) — Note prédite : {meilleur_cap[2]}")
 
         # Test automatique de tous les bonus
         st.markdown("---")
-        st.subheader("🎯 Recommandation Gazon Stats")
+        st.subheader("Recommandation Maestro Tactico")
 
         if mes_bonus_dispo:
             st.markdown("**Impact de chaque bonus disponible :**")
 
             resultats_bonus = {}
-            with st.spinner("🔄 Test des bonus en cours..."):
+            with st.spinner("Test des bonus en cours..."):
                 for bonus in mes_bonus_dispo:
                     bonus_key = bonus_key_map.get(bonus, None)
                     res_b = monte_carlo_match(
@@ -348,14 +348,14 @@ def afficher_adversaire(df, cols_journees):
                 gain = round(res['victoires'] - res_sb['victoires'], 1)
                 gain_str = f"+{gain}%" if gain > 0 else f"{gain}%"
                 if res['victoires'] > 50:
-                    emoji = "✅"
+                    indicateur = "+"
                 elif res['victoires'] > 40:
-                    emoji = "⚖️"
+                    indicateur = "~"
                 else:
-                    emoji = "❌"
+                    indicateur = "-"
                 st.write(
-                    f"{emoji} **{nom_bonus}** → "
-                    f"🏆 {res['victoires']}% victoire ({gain_str}) | "
+                    f"{indicateur} **{nom_bonus}** → "
+                    f"{res['victoires']}% victoire ({gain_str}) | "
                     f"Score: {res['score_moy_moi']}-{res['score_moy_adv']}"
                 )
 
@@ -368,53 +368,53 @@ def afficher_adversaire(df, cols_journees):
             vic = res_sb['victoires']
 
             if vic >= 65:
-                st.success(f"✅ **Gardez vos bonus** — Vous êtes largement favori ({vic}%). Économisez pour un match plus serré !")
+                st.success(f"**Gardez vos bonus** — Largement favori ({vic}%). Économisez pour un match plus serré !")
             elif vic >= 50:
-                if importance_match == "🔥 Crucial":
-                    st.success(f"✅ **Utilisez {nom_meilleur}** — Match crucial, passe à {res_meilleur['victoires']}% de victoire !")
+                if importance_match == "Crucial":
+                    st.success(f"**Utilisez {nom_meilleur}** — Match crucial, passe à {res_meilleur['victoires']}% de victoire !")
                 else:
-                    st.success(f"✅ **Gardez vos bonus** — Favori à {vic}%, bonus non indispensable !")
+                    st.success(f"**Gardez vos bonus** — Favori à {vic}%, bonus non indispensable !")
             elif vic >= 40:
                 if round(res_meilleur['victoires'] - vic, 1) >= 10:
-                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Match serré ({vic}%), le bonus fait passer à {res_meilleur['victoires']}% !")
+                    st.warning(f"**Utilisez {nom_meilleur}** — Match serré ({vic}%), le bonus fait passer à {res_meilleur['victoires']}% !")
                 else:
-                    st.warning(f"⚠️ **Match très serré ({vic}%)** — Aucun bonus ne change significativement le résultat")
+                    st.warning(f"**Match très serré ({vic}%)** — Aucun bonus ne change significativement le résultat")
             elif vic >= 30:
                 if res_meilleur['victoires'] >= 50:
-                    st.warning(f"⚠️ **Utilisez {nom_meilleur}** — Peut renverser la situation ({vic}% → {res_meilleur['victoires']}%) !")
+                    st.warning(f"**Utilisez {nom_meilleur}** — Peut renverser la situation ({vic}% → {res_meilleur['victoires']}%) !")
                 else:
-                    st.error(f"❌ **Défaite probable ({vic}%)** — Aucun bonus ne suffit. Économisez-les !")
+                    st.error(f"**Défaite probable ({vic}%)** — Aucun bonus ne suffit. Économisez-les !")
             else:
-                st.error(f"❌ **Défaite très probable ({vic}%)** — N'utilisez aucun bonus, gardez-les pour un match gagnable !")
+                st.error(f"**Défaite très probable ({vic}%)** — N'utilisez aucun bonus, gardez-les pour un match gagnable !")
 
         else:
             vic = res_sb['victoires']
             if vic >= 65:
-                st.success(f"✅ Largement favori ({vic}%) — Pas besoin de bonus !")
+                st.success(f"Largement favori ({vic}%) — Pas besoin de bonus !")
             elif vic >= 50:
-                st.success(f"✅ Favori ({vic}%) — Victoire probable !")
+                st.success(f"Favori ({vic}%) — Victoire probable !")
             elif vic >= 40:
-                st.warning(f"⚠️ Match serré ({vic}%) — Envisagez d'utiliser un bonus !")
+                st.warning(f"Match serré ({vic}%) — Envisagez d'utiliser un bonus !")
             elif vic >= 30:
-                st.error(f"❌ Outsider ({vic}%) — Utilisez un bonus si disponible !")
+                st.error(f"Outsider ({vic}%) — Utilisez un bonus si disponible !")
             else:
-                st.error(f"❌ Très outsider ({vic}%) — Économisez vos bonus !")
+                st.error(f"Très outsider ({vic}%) — Économisez vos bonus !")
 
         if bonus_adv_restant != "Aucun":
-            st.info(f"⚠️ L'adversaire a encore {bonus_adv_restant.split('—')[0].strip()} — Vérifiez sur MPGStats !")
+            st.info(f"L'adversaire dispose encore de : {bonus_adv_restant.split('—')[0].strip()} — Vérifiez sur MPGStats !")
         if "Miroir" in bonus_adv_restant:
-            st.warning("🪞 **L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
+            st.warning("**L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
 
         # Détails équipes
         st.markdown("---")
         col_eq1, col_eq2 = st.columns(2)
 
         with col_eq1:
-            st.subheader("🔵 Mon équipe")
+            st.subheader("Mon équipe")
             st.markdown(_roster_html(equipe_moi), unsafe_allow_html=True)
 
         with col_eq2:
-            st.subheader("🔴 Équipe adverse")
+            st.subheader("Équipe adverse")
             def _rotaldo(j):
-                return "⚠️ Rotaldo probable" if not j['note_pred'] or j['note_pred'] < 3 else None
+                return "Rotaldo probable" if not j['note_pred'] or j['note_pred'] < 3 else None
             st.markdown(_roster_html(equipe_adv, extra_badge_fn=_rotaldo), unsafe_allow_html=True)
