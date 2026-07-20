@@ -49,13 +49,13 @@ def _tension(pct):
 def _pill_demande(val):
     val = str(val)
     if 'Très demandé' in val:
-        return pill(val, 'bad')
-    if 'Demandé' in val:
-        return pill(val, 'warn')
-    if 'Peu demandé' in val:
-        return pill(val, 'mid')
-    if 'Indésirable' in val:
         return pill(val, 'info')
+    if 'Demandé' in val:
+        return pill(val, 'good')
+    if 'Peu demandé' in val:
+        return pill(val, 'warn')
+    if 'Indésirable' in val:
+        return pill(val, 'bad')
     return dash(val)
 
 
