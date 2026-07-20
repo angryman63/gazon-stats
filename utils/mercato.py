@@ -96,8 +96,6 @@ def _table_html(df):
 
 def afficher_mercato(df, cols_journees):
     inject_style()
-    st.header("Conseiller Mercato")
-
     separateur("TAILLE DE LA LIGUE")
     # --- Sélecteur de taille de ligue ---
     taille_choisie = st.radio(
