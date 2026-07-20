@@ -77,6 +77,71 @@ div[data-testid="stRadio"] label p {
     margin: 0 0 14px 0;
 }
 .gs-dash { color: #555555; }
+
+/* ── Séparateur or ── */
+.gs-sep {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 1.8rem 0 1.2rem;
+}
+.gs-sep-line-l {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #c8a84b44);
+}
+.gs-sep-line-r {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to left, transparent, #c8a84b44);
+}
+.gs-sep-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    color: #c8a84b;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+/* ── Cards équipes ── */
+.gs-equipe-card {
+    background-color: #141414;
+    border-radius: 6px;
+    padding: 16px 20px;
+    border-top: 2px solid;
+    margin-bottom: 12px;
+}
+.gs-equipe-card.moi { border-color: #c8a84b; }
+.gs-equipe-card.adv { border-color: #333333; }
+.gs-equipe-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.gs-equipe-title.or  { color: #c8a84b; }
+.gs-equipe-title.gris { color: #555555; }
+
+/* ── Bouton simulation ── */
+div[data-testid="stButton"] > button[kind="primary"] {
+    background: linear-gradient(135deg, #c8a84b, #8a6f2e) !important;
+    color: #0d0d0d !important;
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 0.75rem 2.5rem !important;
+    transition: opacity 0.2s !important;
+}
+div[data-testid="stButton"] > button[kind="primary"]:hover {
+    opacity: 0.85 !important;
+}
+
 .gs-roster {
     display: flex;
     flex-direction: column;
@@ -117,6 +182,16 @@ div[data-testid="stRadio"] label p {
 """
 def inject_style():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
+
+def separateur(titre):
+    st.markdown(f"""
+    <div class="gs-sep">
+        <div class="gs-sep-line-l"></div>
+        <span class="gs-sep-label">{titre}</span>
+        <div class="gs-sep-line-r"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
 def escape(val):
     return _html.escape(str(val))
 def pill(text, kind='mid'):
