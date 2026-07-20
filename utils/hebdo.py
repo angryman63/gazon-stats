@@ -9,12 +9,14 @@ def _pill_regularite(val):
     val = '' if pd.isna(val) else str(val).strip()
     if not val:
         return dash()
-    if '🔴' in val:
-        return pill(val, 'bad')
-    if '🟠' in val or '🟡' in val:
-        return pill(val, 'warn')
-    if '🟢' in val:
+    if 'Métronome' in val:
+        return pill(val, 'good-dark')
+    if 'Régulier' in val:
         return pill(val, 'good')
+    if 'Irrégulier' in val:
+        return pill(val, 'warn')
+    if 'Rotaldo' in val:
+        return pill(val, 'bad')
     return pill(val, 'mid')
 
 
@@ -71,7 +73,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
-    st.header("🏆 Recommandations par poste")
+    st.header("Recommandations par poste")
 
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
@@ -87,8 +89,8 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
 
     if filtrer and mes_joueurs_input.strip():
         tab0, tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-            "⭐ Mes joueurs", "⚡ Attaquants", "🎯 Milieux Off.",
-            "🛡️ Milieux Déf.", "🔒 Défenseurs C.", "↔️ Défenseurs L.", "🧤 Gardiens"
+            "Mes joueurs", "Attaquants", "Milieux Off.",
+            "Milieux Déf.", "Défenseurs C.", "Défenseurs L.", "Gardiens"
         ])
         with tab0:
             top = df_mes_joueurs.sort_values('_score', ascending=False)[
@@ -100,11 +102,11 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
                     unsafe_allow_html=True
                 )
             else:
-                st.warning("⚠️ Aucun joueur trouvé — vérifiez l'orthographe")
+                st.warning("Aucun joueur trouvé — vérifiez l'orthographe")
     else:
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-            "⚡ Attaquants", "🎯 Milieux Off.", "🛡️ Milieux Déf.",
-            "🔒 Défenseurs C.", "↔️ Défenseurs L.", "🧤 Gardiens"
+            "Attaquants", "Milieux Off.", "Milieux Déf.",
+            "Défenseurs C.", "Défenseurs L.", "Gardiens"
         ])
 
     postes_tabs = {
