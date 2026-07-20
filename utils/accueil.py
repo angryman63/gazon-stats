@@ -1,11 +1,8 @@
 import streamlit as st
-
 def afficher_accueil():
-
     st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Raleway:wght@400;500&display=swap');
-
 .hero-wrap {
     width: 100%;
     text-align: center;
@@ -59,7 +56,6 @@ def afficher_accueil():
     color: #888888; line-height: 1.75; margin: 0;
 }
 </style>
-
 <div class="hero-wrap">
   <div class="hero-logo-big">
     <span class="mt">MT</span>
@@ -70,33 +66,26 @@ def afficher_accueil():
   <div style="font-family:Raleway,sans-serif; font-size:16px; color:#aaaaaa; line-height:1.7; margin:0 auto 48px auto; text-align:center; width:100%;">Recommandations hebdo, stratégie mercato, analyse de vos adversaires.</div>
 </div>
 """, unsafe_allow_html=True)
-
     col1, col2, col3 = st.columns(3)
-
     with col1:
         st.markdown("""
 <div class="feat-card">
-  <span class="feat-emoji">\U0001f3c6</span>
   <div class="feat-name">Conseiller Hebdo</div>
   <span class="feat-badge badge-free">Gratuit</span>
   <p class="feat-desc">La meilleure compo possible \u00e0 chaque match.</p>
 </div>
 """, unsafe_allow_html=True)
-
     with col2:
         st.markdown("""
 <div class="feat-card">
-  <span class="feat-emoji">\U0001f6d2</span>
   <div class="feat-name">Conseiller Mercato</div>
   <span class="feat-badge badge-premium">Premium</span>
   <p class="feat-desc">Le bon joueur, au bon prix.</p>
 </div>
 """, unsafe_allow_html=True)
-
     with col3:
         st.markdown("""
 <div class="feat-card">
-  <span class="feat-emoji">\u2694\ufe0f</span>
   <div class="feat-name">Simuler le match</div>
   <span class="feat-badge badge-premium">Premium</span>
   <p class="feat-desc">Le match est d\u00e9j\u00e0 jou\u00e9.</p>
