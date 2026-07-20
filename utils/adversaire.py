@@ -176,18 +176,14 @@ def afficher_adversaire(df, cols_journees):
             key="bonus_adv_restant"
         )
 
-    st.markdown("---")
+    separateur("TERRAIN")
 
     domicile = st.radio(
-        "Terrain",
+        "",
         ["Domicile", "Extérieur"],
         horizontal=True,
         key="domicile"
     ) == "Domicile"
-
-    st.markdown("---")
-
-    separateur("TERRAIN")
 
     if st.button("Lancer la simulation", type="primary"):
 
@@ -290,8 +286,6 @@ def afficher_adversaire(df, cols_journees):
             st.metric("Score moyen prévu",
                      f"{res_sb['score_moy_moi']} - {res_sb['score_moy_adv']}")
 
-        # Recommandation capitaine
-        st.markdown("---")
         separateur("RECOMMANDATION CAPITAINE")
         candidats_cap = []
         for ligne, joueurs in equipe_moi.items():
@@ -316,8 +310,6 @@ def afficher_adversaire(df, cols_journees):
             meilleur_cap = max(candidats_cap, key=lambda x: x[3])
             st.success(f"**{meilleur_cap[0]}** ({meilleur_cap[1]}) — Note prédite : {meilleur_cap[2]}")
 
-        # Test automatique de tous les bonus
-        st.markdown("---")
         separateur("RECOMMANDATION MAESTRO TACTICO")
 
         if mes_bonus_dispo:
@@ -361,8 +353,6 @@ def afficher_adversaire(df, cols_journees):
             nom_meilleur = meilleur[0].split('—')[0].strip()
             res_meilleur = meilleur[1]
 
-            st.markdown("---")
-
             vic = res_sb['victoires']
 
             if vic >= 65:
@@ -403,7 +393,6 @@ def afficher_adversaire(df, cols_journees):
         if "Miroir" in bonus_adv_restant:
             st.warning("**L'adversaire a le Miroir !** — Si vous utilisez un bonus, il peut le retourner contre vous !")
 
-        # Détails équipes
         separateur("DÉTAILS DES ÉQUIPES")
         col_eq1, col_eq2 = st.columns(2)
 
