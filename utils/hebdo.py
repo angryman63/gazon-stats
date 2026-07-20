@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from modele import nettoyer_note, calculer_clutch, predire_note, alerte_blessure, etiquette_regularite, absences_consecutives
-from utils.table_style import inject_style, pill, dash, name_cell, table_html
+from utils.table_style import inject_style, pill, dash, name_cell, table_html, separateur
 
 
 def _pill_regularite(val):
@@ -85,6 +85,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
 | 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
 """)
 
+    separateur("RECOMMANDATIONS PAR POSTE")
     colonnes_affichage = ['Joueur', 'Club', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
 
     if filtrer and mes_joueurs_input.strip():
