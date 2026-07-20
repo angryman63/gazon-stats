@@ -28,14 +28,6 @@ TAILLES_LIGUE = {
 
 
 def _colonnes_taille(df, taille_label):
-    """Renvoie la colonne enchère pour la taille choisie, et la colonne % achat T1
-    à utiliser pour la Tension.
-
-    L'enchère s'adapte à la taille de ligue sélectionnée. La Tension, elle, se base
-    toujours sur le % achat T1 global (toutes tailles confondues) : sur certaines
-    tailles de ligue, l'échantillon de ligues suivies est trop petit et fait sauter
-    le chiffre de façon peu fiable (ex: 11%, 22%, 33% selon 1, 2 ou 3 ligues sur 9).
-    Le chiffre global, calculé sur un échantillon plus large, est plus stable."""
     cfg = TAILLES_LIGUE[taille_label]
     col_enchere = cfg["enchere"] if cfg["enchere"] in df.columns else "Enchere moy"
     col_achat = "% achat T1" if "% achat T1" in df.columns else cfg["achat_t1"]
@@ -44,14 +36,14 @@ def _colonnes_taille(df, taille_label):
 
 def _tension(pct):
     if pd.isna(pct):
-        return "❓"
+        return "?"
     if pct >= 80:
         return "🔥🔥 Très demandé"
     if pct >= 50:
         return "🔥 Demandé"
     if pct >= 20:
-        return "😐 Modéré"
-    return "🧊 Peu demandé"
+        return "Peu demandé"
+    return "Indésirable"
 
 
 def _pill_demande(val):
@@ -60,9 +52,9 @@ def _pill_demande(val):
         return pill(val, 'bad')
     if 'Demandé' in val:
         return pill(val, 'warn')
-    if 'Modéré' in val:
-        return pill(val, 'mid')
     if 'Peu demandé' in val:
+        return pill(val, 'mid')
+    if 'Indésirable' in val:
         return pill(val, 'info')
     return dash(val)
 
@@ -104,7 +96,7 @@ def _table_html(df):
 
 def afficher_mercato(df, cols_journees):
     inject_style()
-    st.markdown('<div class="gs-page-title">🛒 Conseiller Mercato</div>', unsafe_allow_html=True)
+    st.markdown('<div class="gs-page-title">Conseiller Mercato</div>', unsafe_allow_html=True)
 
     # --- Sélecteur de taille de ligue ---
     taille_choisie = st.radio(
@@ -124,7 +116,7 @@ def afficher_mercato(df, cols_journees):
 
     if taille_choisie != "Toutes tailles" and TAILLES_LIGUE[taille_choisie]["enchere"] not in df.columns:
         st.caption(
-            f"⚠️ Pas de donnée détaillée pour les ligues à {taille_choisie.split()[0]} — "
+            f"Pas de donnée détaillée pour les ligues à {taille_choisie.split()[0]} — "
             f"affichage de l'enchère moyenne toutes tailles confondues."
         )
 
@@ -229,8 +221,8 @@ def afficher_mercato(df, cols_journees):
 
     # Sélection stratégie
     strategie_choisie = st.radio(
-        "Choisissez votre stratégie mercato :",
-        ["⭐⭐ Stars", "⭐ Valeurs sûres", "⚖️ Équilibre", "🌱 Pépites", "⚠️ À éviter"],
+        "Stratégie mercato :",
+        ["Stars", "Valeurs sûres", "Équilibre", "Pépites", "À éviter"],
         horizontal=True
     )
 
@@ -250,29 +242,29 @@ def afficher_mercato(df, cols_journees):
 |---|
 | 🔥🔥 Très demandé |
 | 🔥 Demandé |
-| 😐 Modéré |
-| 🧊 Peu demandé |
+| Peu demandé |
+| Indésirable |
 """)
 
     cols_affichage = ['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
                        'Note', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
 
     strategie_map = {
-        "⭐⭐ Stars": ('stars', df_stars),
-        "⭐ Valeurs sûres": ('valeurs_sures', df_valeurs),
-        "⚖️ Équilibre": ('equilibre', df_equilibre),
-        "🌱 Pépites": ('pepites', df_pepites),
+        "Stars": ('stars', df_stars),
+        "Valeurs sûres": ('valeurs_sures', df_valeurs),
+        "Équilibre": ('equilibre', df_equilibre),
+        "Pépites": ('pepites', df_pepites),
     }
 
-    if strategie_choisie == "⚠️ À éviter":
-        st.subheader("⚠️ Joueurs chers mais décevants")
+    if strategie_choisie == "À éviter":
+        st.subheader("Joueurs chers mais décevants")
         st.markdown(
             f'<p class="gs-caption">Enchères affichées pour : {taille_choisie}</p>',
             unsafe_allow_html=True
         )
         df_eviter['Raison'] = df_eviter.apply(lambda row:
-            "💸 Cher + peu de matchs" if row['Matchs_joues'] < seuil_matchs
-            else "📉 Cher + note décevante", axis=1
+            "Cher + peu de matchs" if row['Matchs_joues'] < seuil_matchs
+            else "Cher + note décevante", axis=1
         )
         st.markdown(
             _table_html(
@@ -289,9 +281,9 @@ def afficher_mercato(df, cols_journees):
             unsafe_allow_html=True
         )
         postes = {
-            'A': '⚡ Attaquants', 'MO': '🎯 Milieux Off.',
-            'MD': '🛡️ Milieux Déf.', 'DC': '🔒 Défenseurs C.',
-            'DL': '↔️ Défenseurs L.', 'G': '🧤 Gardiens'
+            'A': 'Attaquants', 'MO': 'Milieux Off.',
+            'MD': 'Milieux Déf.', 'DC': 'Défenseurs C.',
+            'DL': 'Défenseurs L.', 'G': 'Gardiens'
         }
         tabs = st.tabs(list(postes.values()))
         for tab, (code, nom) in zip(tabs, postes.items()):
