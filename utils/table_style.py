@@ -1,6 +1,5 @@
 import html as _html
 import streamlit as st
-
 THEME_CSS = """
 <style>
 div[data-testid="stRadio"] > div {
@@ -55,7 +54,6 @@ div[data-testid="stRadio"] label p {
 .gs-table tbody tr:nth-child(even) { background-color: #1c1c1c; }
 .gs-table tbody tr:hover { background-color: #2a2412; }
 .gs-table .gs-name { color: #ffffff; font-weight: 600; }
-
 .gs-pill {
     display: inline-block;
     padding: 2px 10px;
@@ -64,11 +62,12 @@ div[data-testid="stRadio"] label p {
     font-weight: 600;
     white-space: nowrap;
 }
-.gs-pill-bad   { background-color: #3d1f1f; color: #ff6b6b; }
-.gs-pill-warn  { background-color: #3a2a12; color: #e8a33d; }
-.gs-pill-good  { background-color: #1e3a24; color: #6fd18c; }
-.gs-pill-mid   { background-color: #2a2a2a; color: #c8a84b; }
-.gs-pill-info  { background-color: #14262e; color: #6ec6d9; }
+.gs-pill-bad        { background-color: #3d1f1f; color: #ff6b6b; }
+.gs-pill-warn       { background-color: #3a2a12; color: #e8a33d; }
+.gs-pill-good       { background-color: #1e3a24; color: #6fd18c; }
+.gs-pill-good-dark  { background-color: #0d2414; color: #3da85e; }
+.gs-pill-mid        { background-color: #2a2a2a; color: #c8a84b; }
+.gs-pill-info       { background-color: #14262e; color: #6ec6d9; }
 .gs-page-title {
     font-family: 'Oswald', sans-serif;
     font-weight: 700;
@@ -78,7 +77,6 @@ div[data-testid="stRadio"] label p {
     margin: 0 0 14px 0;
 }
 .gs-dash { color: #555555; }
-
 .gs-roster {
     display: flex;
     flex-direction: column;
@@ -117,29 +115,17 @@ div[data-testid="stRadio"] label p {
 }
 </style>
 """
-
-
 def inject_style():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
-
-
 def escape(val):
     return _html.escape(str(val))
-
-
 def pill(text, kind='mid'):
-    """kind: bad | warn | good | mid | info"""
+    """kind: bad | warn | good | good-dark | mid | info"""
     return f'<span class="gs-pill gs-pill-{kind}">{escape(text)}</span>'
-
-
 def dash(symbol='—'):
     return f'<span class="gs-dash">{symbol}</span>'
-
-
 def name_cell(val):
     return f'<span class="gs-name">{escape(val)}</span>'
-
-
 def table_html(df, cell_renderer):
     """Construit un tableau HTML stylé.
     cell_renderer(col, val) -> str (html à insérer dans la cellule)."""
