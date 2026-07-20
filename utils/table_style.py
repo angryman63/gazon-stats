@@ -83,22 +83,22 @@ div[data-testid="stRadio"] label p {
     display: flex;
     align-items: center;
     gap: 14px;
-    margin: 1.8rem 0 1.2rem;
+    margin: 1rem 0 0.8rem;
 }
 .gs-sep-line-l {
     flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, transparent, #c8a84b44);
+    height: 2px;
+    background: linear-gradient(to right, transparent, #c8a84b66);
 }
 .gs-sep-line-r {
     flex: 1;
-    height: 1px;
-    background: linear-gradient(to left, transparent, #c8a84b44);
+    height: 2px;
+    background: linear-gradient(to left, transparent, #c8a84b66);
 }
 .gs-sep-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 0.68rem;
-    letter-spacing: 0.2em;
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
     color: #c8a84b;
     white-space: nowrap;
     text-transform: uppercase;
