@@ -97,8 +97,8 @@ div[data-testid="stRadio"] label p {
 }
 .gs-sep-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 0.85rem;
-    letter-spacing: 0.18em;
+    font-size: 1.1rem;
+    letter-spacing: 0.22em;
     color: #c8a84b;
     white-space: nowrap;
     text-transform: uppercase;
