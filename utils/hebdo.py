@@ -5,71 +5,6 @@ from modele import nettoyer_note, calculer_clutch, predire_note, alerte_blessure
 from utils.table_style import inject_style, pill, dash, name_cell, table_html, separateur
 
 
-# Ordre de qualité pour le tri de la colonne Régularité (du meilleur au moins bon)
-_RANG_REGULARITE = {
-    'Métronome': 4,
-    'Régulier': 3,
-    'Irrégulier': 2,
-    'Rotaldo': 1,
-}
-
-
-def _rang_regularite(val):
-    val = '' if pd.isna(val) else str(val)
-    for label, rang in _RANG_REGULARITE.items():
-        if label in val:
-            return rang
-    return 0
-
-
-def _cle_tri(df, colonne):
-    """Retourne une Series servant de clé de tri numérique pour la colonne donnée,
-    sans modifier les données affichées."""
-    if colonne == 'Régularité':
-        return df[colonne].apply(_rang_regularite)
-    if colonne == '% Titulaire':
-        return df[colonne].astype(str).str.rstrip('%').astype(float)
-    return df[colonne]
-
-
-def _trier_tableau(df, colonne, croissant):
-    cle = _cle_tri(df, colonne)
-    return (
-        df.assign(_cle_tri=cle)
-          .sort_values('_cle_tri', ascending=croissant, kind='mergesort')
-          .drop(columns='_cle_tri')
-          .reset_index(drop=True)
-    )
-
-
-def _afficher_tableau_triable(df, colonnes_affichage, cell_renderer, key_prefix):
-    """Affiche un sélecteur 'Trier par' + croissant/décroissant au-dessus du tableau stylé,
-    puis le tableau HTML. Ne modifie ni les noms de colonnes ni les données : seul
-    l'ordre des lignes change."""
-    col_select, col_ordre = st.columns([3, 1])
-    with col_select:
-        options = ["Recommandé"] + colonnes_affichage
-        colonne_tri = st.selectbox(
-            "Trier par", options, index=0, key=f"tri_col_{key_prefix}"
-        )
-    with col_ordre:
-        ordre = st.radio(
-            "Ordre", ["↓", "↑"], horizontal=True,
-            key=f"tri_ordre_{key_prefix}", label_visibility="collapsed"
-        )
-
-    if colonne_tri == "Recommandé":
-        df_affiche = df
-    else:
-        croissant = (ordre == "↑")
-        df_affiche = _trier_tableau(df, colonne_tri, croissant)
-
-    st.markdown(
-        table_html(df_affiche.reset_index(drop=True), cell_renderer),
-        unsafe_allow_html=True
-    )
-
-
 def _pill_regularite(val):
     val = '' if pd.isna(val) else str(val).strip()
     if not val:
@@ -138,8 +73,6 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
-    st.header("Recommandations par poste")
-
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
 | Emoji | Statut |
@@ -159,12 +92,13 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
             "Milieux Déf.", "Défenseurs C.", "Défenseurs L.", "Gardiens"
         ])
         with tab0:
-            colonnes_mes_joueurs = ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
-            top = df_mes_joueurs.sort_values('_score', ascending=False)[colonnes_mes_joueurs]
+            top = df_mes_joueurs.sort_values('_score', ascending=False)[
+                ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
+            ]
             if len(top) > 0:
-                _afficher_tableau_triable(
-                    top.reset_index(drop=True), colonnes_mes_joueurs,
-                    _formater_cellule_hebdo, key_prefix="mes_joueurs"
+                st.markdown(
+                    table_html(top.reset_index(drop=True), _formater_cellule_hebdo),
+                    unsafe_allow_html=True
                 )
             else:
                 st.warning("Aucun joueur trouvé — vérifiez l'orthographe")
@@ -184,9 +118,9 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
                 '_score', ascending=False
             )[colonnes_affichage]
             if len(top) > 0:
-                _afficher_tableau_triable(
-                    top.reset_index(drop=True), colonnes_affichage,
-                    _formater_cellule_hebdo, key_prefix=f"poste_{code}"
+                st.markdown(
+                    table_html(top.reset_index(drop=True), _formater_cellule_hebdo),
+                    unsafe_allow_html=True
                 )
             else:
                 st.info("Aucun joueur disponible pour ce poste")
