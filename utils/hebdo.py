@@ -10,7 +10,7 @@ def _pill_regularite(val):
     if not val:
         return dash()
     if 'Métronome' in val:
-        return pill(val, 'mid')
+        return pill(val, 'info')
     if 'Régulier' in val:
         return pill(val, 'good')
     if 'Irrégulier' in val:
