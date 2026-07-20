@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from modele import nettoyer_note, calculer_clutch, compter_matchs, absences_consecutives, alerte_blessure
-from utils.table_style import inject_style, pill, dash, name_cell, table_html
+from utils.table_style import inject_style, pill, dash, name_cell, table_html, separateur
 
 # ---------------------------------------------------------------------------
 # Colonnes d'enchères disponibles selon la taille de ligue (fichier joueurs enrichi)
@@ -96,8 +96,9 @@ def _table_html(df):
 
 def afficher_mercato(df, cols_journees):
     inject_style()
-    st.markdown('<div class="gs-page-title">Conseiller Mercato</div>', unsafe_allow_html=True)
+    st.header("Conseiller Mercato")
 
+    separateur("TAILLE DE LA LIGUE")
     # --- Sélecteur de taille de ligue ---
     taille_choisie = st.radio(
         "Taille de la ligue :",
@@ -219,6 +220,7 @@ def afficher_mercato(df, cols_journees):
         (df_mercato['%Titu'] >= 50)
     ].copy()
 
+    separateur("STRATÉGIE MERCATO")
     # Sélection stratégie
     strategie_choisie = st.radio(
         "Stratégie mercato :",
