@@ -83,8 +83,6 @@ def _roster_html(equipe, extra_badge_fn=None):
 def afficher_adversaire(df, cols_journees):
     inject_style()
 
-    st.header("Analyser mon adversaire")
-
     separateur("STRATÉGIE")
     strategie_jeu = st.radio(
         "Stratégie de jeu",
