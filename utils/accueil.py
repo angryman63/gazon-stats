@@ -30,14 +30,15 @@ def afficher_accueil():
 .feat-card {
     background-color: #1e1e1e;
     border: 1px solid rgba(200, 168, 75, 0.2);
-    border-radius: 14px; padding: 32px 24px; height: 100%;
+    border-radius: 14px; padding: 32px 24px; min-height: 186px;
+    box-sizing: border-box;
     transition: border-color 0.2s ease;
 }
 .feat-card:hover {
     border-color: rgba(200, 168, 75, 0.55);
 }
 .feat-name {
-    font-family: "Oswald", sans-serif; font-size: 17px; font-weight: 700;
+    font-family: "Oswald", sans-serif; font-size: 15px; font-weight: 700;
     color: #c8a84b; letter-spacing: 0.5px; margin-bottom: 12px;
 }
 .feat-desc {
