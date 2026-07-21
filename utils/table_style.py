@@ -96,6 +96,22 @@ div[data-testid="stRadio"] label p {
     box-shadow: 0 0 0 2px rgba(200, 168, 75, 0.15);
 }
 
+/* ── Labels "Stratégie de jeu" / "Mode d'analyse" (Simuler le match) ── */
+.st-key-strategie_jeu label[data-testid="stWidgetLabel"] p,
+.st-key-mode_analyse label[data-testid="stWidgetLabel"] p {
+    font-family: 'Raleway', sans-serif !important;
+    font-weight: 500 !important;
+    color: rgba(200, 168, 75, 0.85) !important;
+}
+
+/* ── Titres "Mon équipe" / "Équipe adverse" (Simuler le match) ── */
+h3#mon-equipe,
+h3#equipe-adverse {
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 700 !important;
+    color: #c8a84b !important;
+}
+
 /* ── Onglets de poste (Mercato + Conseiller Hebdo) : Attaquants / Milieux / ... ── */
 .st-key-mercato_postes .react-aria-SelectionIndicator,
 .st-key-hebdo_postes .react-aria-SelectionIndicator {
