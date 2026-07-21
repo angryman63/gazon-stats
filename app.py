@@ -62,8 +62,11 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     background-color: transparent;
     color: #888888;
     border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .stTabs [aria-selected="true"] {
@@ -131,7 +134,7 @@ hr {
 .mt-topband-wordmark {
     font-family: 'Oswald', sans-serif;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 22px;
     color: #c8a84b;
     letter-spacing: 0.35em;
     text-transform: uppercase;
