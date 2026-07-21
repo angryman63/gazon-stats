@@ -82,7 +82,6 @@ def _roster_html(equipe, extra_badge_fn=None):
 
 def afficher_adversaire(df, cols_journees):
     inject_style()
-    st.markdown('<h2 class="gs-page-title">Analyser mon adversaire</h2>', unsafe_allow_html=True)
 
     separateur("STRATÉGIE")
     strategie_jeu = st.radio(

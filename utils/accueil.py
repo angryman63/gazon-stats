@@ -12,7 +12,7 @@ def afficher_accueil():
     padding: 48px 0 32px 0;
 }
 .hero-title {
-    font-family: "Oswald", sans-serif; font-size: 34px; font-weight: 700;
+    font-family: "Oswald", sans-serif; font-size: 30px; font-weight: 700;
     color: #ffffff; line-height: 1.1; margin: 0 0 16px 0;
 }
 .hero-title span { color: #c8a84b; }
