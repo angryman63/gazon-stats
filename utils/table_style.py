@@ -14,13 +14,17 @@ div[data-testid="stRadio"] label p {
     color: #f5f5f5 !important;
 }
 
-/* ── Sélecteurs Mercato : taille de ligue / stratégie (pilules or) ── */
+/* ── Sélecteurs en pilules or (Mercato + Simuler le match) ── */
 .st-key-mercato_taille_ligue [data-testid="stRadioGroup"],
-.st-key-mercato_strategie [data-testid="stRadioGroup"] {
+.st-key-mercato_strategie [data-testid="stRadioGroup"],
+.st-key-strategie_jeu [data-testid="stRadioGroup"],
+.st-key-mode_analyse [data-testid="stRadioGroup"] {
     gap: 6px;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"],
-.st-key-mercato_strategie [data-testid="stRadioOption"] {
+.st-key-mercato_strategie [data-testid="stRadioOption"],
+.st-key-strategie_jeu [data-testid="stRadioOption"],
+.st-key-mode_analyse [data-testid="stRadioOption"] {
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
@@ -28,20 +32,28 @@ div[data-testid="stRadio"] label p {
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"]:hover,
-.st-key-mercato_strategie [data-testid="stRadioOption"]:hover {
+.st-key-mercato_strategie [data-testid="stRadioOption"]:hover,
+.st-key-strategie_jeu [data-testid="stRadioOption"]:hover,
+.st-key-mode_analyse [data-testid="stRadioOption"]:hover {
     background-color: rgba(200, 168, 75, 0.08);
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"][data-selected="true"],
-.st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"] {
+.st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"],
+.st-key-strategie_jeu [data-testid="stRadioOption"][data-selected="true"],
+.st-key-mode_analyse [data-testid="stRadioOption"][data-selected="true"] {
     background-color: rgba(200, 168, 75, 0.18);
     border-color: #c8a84b;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"] > div > div > div:first-child,
-.st-key-mercato_strategie [data-testid="stRadioOption"] > div > div > div:first-child {
+.st-key-mercato_strategie [data-testid="stRadioOption"] > div > div > div:first-child,
+.st-key-strategie_jeu [data-testid="stRadioOption"] > div > div > div:first-child,
+.st-key-mode_analyse [data-testid="stRadioOption"] > div > div > div:first-child {
     display: none;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
-.st-key-mercato_strategie [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
+.st-key-mercato_strategie [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
+.st-key-strategie_jeu [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
+.st-key-mode_analyse [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
     font-family: 'Oswald', sans-serif !important;
     font-weight: 600 !important;
     letter-spacing: 0.03em;
@@ -50,9 +62,38 @@ div[data-testid="stRadio"] label p {
     transition: color 0.2s ease;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
-.st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p {
+.st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
+.st-key-strategie_jeu [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
+.st-key-mode_analyse [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p {
     color: #c8a84b !important;
     font-weight: 700 !important;
+}
+
+/* ── Zones de texte "Simuler le match" : Titulaires / Remplaçants / Joueurs adverses ── */
+.st-key-mes_titu label[data-testid="stWidgetLabel"] p,
+.st-key-mes_rempl label[data-testid="stWidgetLabel"] p,
+.st-key-adv_titu label[data-testid="stWidgetLabel"] p,
+.st-key-adv_rempl label[data-testid="stWidgetLabel"] p,
+.st-key-adv_joueurs label[data-testid="stWidgetLabel"] p {
+    font-family: 'Raleway', sans-serif !important;
+}
+.st-key-mes_titu [data-testid="stTextAreaRootElement"],
+.st-key-mes_rempl [data-testid="stTextAreaRootElement"],
+.st-key-adv_titu [data-testid="stTextAreaRootElement"],
+.st-key-adv_rempl [data-testid="stTextAreaRootElement"],
+.st-key-adv_joueurs [data-testid="stTextAreaRootElement"] {
+    background-color: #161616 !important;
+    border: 1px solid rgba(200, 168, 75, 0.4) !important;
+    border-radius: 8px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.st-key-mes_titu [data-testid="stTextAreaRootElement"]:focus-within,
+.st-key-mes_rempl [data-testid="stTextAreaRootElement"]:focus-within,
+.st-key-adv_titu [data-testid="stTextAreaRootElement"]:focus-within,
+.st-key-adv_rempl [data-testid="stTextAreaRootElement"]:focus-within,
+.st-key-adv_joueurs [data-testid="stTextAreaRootElement"]:focus-within {
+    border-color: #c8a84b !important;
+    box-shadow: 0 0 0 2px rgba(200, 168, 75, 0.15);
 }
 
 /* ── Onglets de poste (Mercato + Conseiller Hebdo) : Attaquants / Milieux / ... ── */
