@@ -155,7 +155,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         tab0, tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
             "Mes joueurs", "Attaquants", "Milieux Off.",
             "Milieux Déf.", "Défenseurs C.", "Défenseurs L.", "Gardiens"
-        ])
+        ], key="hebdo_postes")
         with tab0:
             colonnes_mes_joueurs = ['Joueur', 'Club', 'Poste', 'Note saison', 'Forme 6J', 'Régularité', '% Titulaire']
             top = df_mes_joueurs.sort_values('_score', ascending=False)[colonnes_mes_joueurs]
@@ -170,7 +170,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
             "Attaquants", "Milieux Off.", "Milieux Déf.",
             "Défenseurs C.", "Défenseurs L.", "Gardiens"
-        ])
+        ], key="hebdo_postes")
 
     postes_tabs = {
         tab1: 'A', tab2: 'MO', tab3: 'MD',

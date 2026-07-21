@@ -44,6 +44,47 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     border-right: 1px solid #c8a84b33;
 }
 
+/* Section "Mes joueurs" (sidebar) */
+[data-testid="stSidebar"] h3 {
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #c8a84b !important;
+    font-size: 1.05rem !important;
+}
+
+[data-testid="stTextAreaRootElement"] {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333333 !important;
+    border-radius: 6px;
+}
+
+[data-testid="stTextArea"] textarea {
+    color: #f5f5f5 !important;
+}
+
+/* Case "Afficher uniquement mes joueurs" */
+[data-testid="stCheckbox"] label > div:first-of-type {
+    background-color: #1a1a1a !important;
+    border: 1px solid rgba(200, 168, 75, 0.5) !important;
+    border-radius: 4px !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-testid="stCheckbox"] label[data-selected="true"] > div:first-of-type {
+    background-color: #c8a84b !important;
+    border-color: #c8a84b !important;
+}
+
+[data-testid="stCheckbox"] label[data-selected="true"] > div:first-of-type svg polyline {
+    stroke: #0d0d0d !important;
+}
+
+[data-testid="stCheckbox"] [data-testid="stMarkdownContainer"] p {
+    color: #e8e8e8 !important;
+}
+
 /* Topbar */
 [data-testid="stHeader"] {
     background-color: #0d0d0d !important;
