@@ -154,6 +154,7 @@ hr {
 .mt-topband {
     text-align: center;
     padding: 18px 16px 12px 16px;
+    margin-top: -38px;
 }
 
 .mt-topband-wordmark {
@@ -169,7 +170,7 @@ hr {
 .mt-topband-line {
     height: 1px;
     background: linear-gradient(to right, transparent, #c8a84b, transparent);
-    margin: 0 0 6px 0;
+    margin: 0 0 32px 0;
 }
 </style>
 """, unsafe_allow_html=True)
