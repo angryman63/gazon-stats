@@ -64,12 +64,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     color: #f5f5f5 !important;
 }
 
-/* Label "Joueurs (un par ligne)" (sidebar) */
-.st-key-mes_joueurs_textarea label[data-testid="stWidgetLabel"] p {
-    font-family: 'Raleway', sans-serif !important;
-    color: rgba(255, 255, 255, 0.75) !important;
-}
-
 /* Case "Afficher uniquement mes joueurs" */
 [data-testid="stCheckbox"] label > div:first-of-type {
     background-color: #1a1a1a !important;
@@ -311,9 +305,9 @@ with st.sidebar:
     mes_joueurs_input = st.text_area(
         "Joueurs (un par ligne)",
         value=st.session_state["mes_joueurs_input"],
-        placeholder="Greenwood\nBarcola\nTolisso",
         height=150,
-        key="mes_joueurs_textarea"
+        key="mes_joueurs_textarea",
+        label_visibility="collapsed"
     )
 
     if st.button("Valider", key="btn_valider_joueurs"):
