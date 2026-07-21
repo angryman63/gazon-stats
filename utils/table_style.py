@@ -53,18 +53,21 @@ div[data-testid="stRadio"] label p {
     font-weight: 700 !important;
 }
 
-/* ── Onglets de poste Mercato (Attaquants / Milieux / ...) ── */
-.st-key-mercato_postes .react-aria-SelectionIndicator {
+/* ── Onglets de poste (Mercato + Conseiller Hebdo) : Attaquants / Milieux / ... ── */
+.st-key-mercato_postes .react-aria-SelectionIndicator,
+.st-key-hebdo_postes .react-aria-SelectionIndicator {
     display: none !important;
 }
-.st-key-mercato_postes > div > [role="tablist"] {
+.st-key-mercato_postes > div > [role="tablist"],
+.st-key-hebdo_postes > div > [role="tablist"] {
     background-color: #1a1a1a !important;
     border: 1px solid #2a2a2a !important;
     border-radius: 10px !important;
     padding: 6px !important;
     gap: 6px !important;
 }
-.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"] {
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"],
+.st-key-hebdo_postes > div > [role="tablist"] > [data-testid="stTab"] {
     position: relative !important;
     background-color: transparent !important;
     color: rgba(255, 255, 255, 0.62) !important;
@@ -78,16 +81,19 @@ div[data-testid="stRadio"] label p {
     border-bottom: none !important;
     transition: color 0.25s ease, background-color 0.25s ease !important;
 }
-.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"]:hover {
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"]:hover,
+.st-key-hebdo_postes > div > [role="tablist"] > [data-testid="stTab"]:hover {
     color: rgba(255, 255, 255, 0.92) !important;
     background-color: rgba(200, 168, 75, 0.08) !important;
 }
-.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"] {
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"],
+.st-key-hebdo_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"] {
     color: #c8a84b !important;
     background-color: rgba(200, 168, 75, 0.13) !important;
     font-weight: 700 !important;
 }
-.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"]::after {
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"]::after,
+.st-key-hebdo_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"]::after {
     content: "";
     position: absolute;
     left: 12px;
@@ -96,6 +102,60 @@ div[data-testid="stRadio"] label p {
     height: 2px;
     border-radius: 2px;
     background-color: #c8a84b;
+}
+
+/* ── Sélecteur d'ordre de tri (↓ / ↑) à côté de "Trier par" ── */
+[class*="st-key-tri_ordre_"] [data-testid="stRadioGroup"] {
+    gap: 4px;
+}
+[class*="st-key-tri_ordre_"] [data-testid="stRadioOption"] {
+    background-color: transparent;
+    border: 1px solid rgba(200, 168, 75, 0.25);
+    border-radius: 6px;
+    padding: 4px 10px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+[class*="st-key-tri_ordre_"] [data-testid="stRadioOption"]:hover {
+    background-color: rgba(200, 168, 75, 0.08);
+}
+[class*="st-key-tri_ordre_"] [data-testid="stRadioOption"][data-selected="true"] {
+    background-color: rgba(200, 168, 75, 0.18);
+    border-color: #c8a84b;
+}
+[class*="st-key-tri_ordre_"] [data-testid="stRadioOption"] > div > div > div:first-child {
+    display: none;
+}
+[class*="st-key-tri_ordre_"] [data-testid="stMarkdownContainer"] p {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    transition: color 0.2s ease;
+}
+[class*="st-key-tri_ordre_"] [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p {
+    color: #c8a84b !important;
+}
+
+/* ── Expander "Légende blessures" ── */
+[data-testid="stExpander"] details {
+    background-color: #161616 !important;
+    border: 1px solid rgba(200, 168, 75, 0.25) !important;
+    border-radius: 10px !important;
+}
+[data-testid="stExpander"] summary {
+    border-radius: 10px;
+    transition: background-color 0.2s ease;
+}
+[data-testid="stExpander"] summary:hover {
+    background-color: rgba(200, 168, 75, 0.06) !important;
+}
+[data-testid="stExpander"] [data-testid="stIconMaterial"] {
+    color: #c8a84b !important;
+}
+[data-testid="stExpander"] summary p {
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em;
 }
 .gs-caption {
     color: #c8a84b;
@@ -137,7 +197,7 @@ div[data-testid="stRadio"] label p {
     white-space: nowrap;
 }
 .gs-table tbody tr:nth-child(odd) { background-color: #161616; }
-.gs-table tbody tr:nth-child(even) { background-color: #1c1c1c; }
+.gs-table tbody tr:nth-child(even) { background-color: #202020; }
 .gs-table tbody tr:hover { background-color: #2a2412; }
 .gs-table .gs-name { color: #ffffff; font-weight: 600; }
 .gs-pill {
