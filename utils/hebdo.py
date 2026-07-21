@@ -138,8 +138,6 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
         mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
 
-    st.markdown('<h2 class="gs-page-title">Recommandations par poste</h2>', unsafe_allow_html=True)
-
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
 | Emoji | Statut |
