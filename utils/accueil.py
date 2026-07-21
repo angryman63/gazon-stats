@@ -12,7 +12,7 @@ def afficher_accueil():
     padding: 48px 0 32px 0;
 }
 .hero-title {
-    font-family: "Oswald", sans-serif; font-size: 20px; font-weight: 700;
+    font-family: "Oswald", sans-serif; font-size: 16px; font-weight: 700;
     color: #ffffff; line-height: 1.1; margin: 0 0 16px 0;
 }
 .hero-title span { color: #c8a84b; }
@@ -94,7 +94,7 @@ def afficher_accueil():
 </style>
 
 <div class="hero-wrap">
-  <h1 class="hero-title">Le coach que vos adversaires <span>n\'ont pas</span></h1>
+  <div class="hero-title">Le coach que vos adversaires <span>n\'ont pas</span></div>
   <div class="hero-subtitle">Recommandations hebdo, strat\u00e9gie mercato, analyse de vos adversaires.</div>
   <div class="hero-sep"></div>
 </div>
