@@ -2,6 +2,8 @@ import html as _html
 import streamlit as st
 THEME_CSS = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600&display=swap');
+
 div[data-testid="stRadio"] > div {
     background-color: #1a1a1a;
     padding: 10px 14px;
@@ -104,6 +106,14 @@ div[data-testid="stRadio"] label p {
     background-color: #c8a84b;
 }
 
+/* ── Sélecteur "Trier par" : texte en Raleway (valeur affichée + options du menu) ── */
+[class*="st-key-tri_col_"] input[role="combobox"] {
+    font-family: 'Raleway', sans-serif !important;
+}
+[role="listbox"] [role="option"] {
+    font-family: 'Raleway', sans-serif !important;
+}
+
 /* ── Sélecteur d'ordre de tri (↓ / ↑) à côté de "Trier par" ── */
 [class*="st-key-tri_ordre_"] [data-testid="stRadioGroup"] {
     gap: 4px;
@@ -157,6 +167,9 @@ div[data-testid="stRadio"] label p {
     font-weight: 600 !important;
     letter-spacing: 0.02em;
 }
+[data-testid="stExpander"] table {
+    font-family: 'Raleway', sans-serif !important;
+}
 .gs-caption {
     color: #c8a84b;
     font-size: 0.85em;
@@ -173,7 +186,7 @@ div[data-testid="stRadio"] label p {
 .gs-table {
     width: 100%;
     border-collapse: collapse;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Raleway', sans-serif;
     font-size: 0.87em;
 }
 .gs-table thead th {
@@ -183,6 +196,7 @@ div[data-testid="stRadio"] label p {
     color: #c8a84b;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-family: 'Oswald', sans-serif;
     font-size: 0.72em;
     font-weight: 700;
     padding: 10px 14px;
@@ -200,6 +214,7 @@ div[data-testid="stRadio"] label p {
 .gs-table tbody tr:nth-child(even) { background-color: #202020; }
 .gs-table tbody tr:hover { background-color: #2a2412; }
 .gs-table .gs-name { color: #ffffff; font-weight: 600; }
+.gs-table .gs-pill { font-family: 'Inter', sans-serif; }
 .gs-pill {
     display: inline-block;
     padding: 2px 10px;

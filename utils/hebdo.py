@@ -55,7 +55,7 @@ def _afficher_tableau_triable(df, colonnes_affichage, cell_renderer, key_prefix)
     with col_ordre:
         ordre = st.radio(
             "Ordre", ["↓", "↑"], horizontal=True,
-            key=f"tri_ordre_{key_prefix}", label_visibility="collapsed"
+            key=f"tri_ordre_{key_prefix}", label_visibility="hidden"
         )
 
     if colonne_tri == "Recommandé":
