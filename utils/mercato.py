@@ -231,7 +231,7 @@ def afficher_mercato(df, cols_journees):
 
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
-| Emoji | Statut |
+|  | Statut |
 |---|---|
 | 🚑 | Blessé — 8+ matchs manqués |
 | 🩹 | Blessé — moins de 8 matchs manqués |
