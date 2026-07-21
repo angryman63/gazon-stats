@@ -50,7 +50,8 @@ def _afficher_tableau_triable(df, colonnes_affichage, cell_renderer, key_prefix)
     with col_select:
         options = ["Recommandé"] + colonnes_affichage
         colonne_tri = st.selectbox(
-            "Trier par", options, index=0, key=f"tri_col_{key_prefix}"
+            "Trier par", options, index=0, key=f"tri_col_{key_prefix}",
+            filter_mode=None
         )
     with col_ordre:
         ordre = st.radio(
