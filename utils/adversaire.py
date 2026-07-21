@@ -142,11 +142,12 @@ def afficher_adversaire(df, cols_journees):
     col_b1, col_b2 = st.columns(2)
 
     with col_b1:
-        st.markdown("**Bonus disponibles**")
+        st.subheader("Bonus disponibles")
         mes_bonus_dispo = st.multiselect(
             "Bonus disponibles",
             liste_bonus,
-            key="mes_bonus_dispo"
+            key="mes_bonus_dispo",
+            label_visibility="collapsed"
         )
         joueur_uber = None
         if any("Uber Eats" in b for b in mes_bonus_dispo):
@@ -162,11 +163,12 @@ def afficher_adversaire(df, cols_journees):
         )
 
     with col_b2:
-        st.markdown("**Bonus adverses**")
+        st.subheader("Bonus adverses")
         bonus_adv_utilises = st.multiselect(
             "Bonus adverses disponibles",
             liste_bonus,
-            key="bonus_adv_utilises"
+            key="bonus_adv_utilises",
+            label_visibility="collapsed"
         )
         bonus_adv_restant = st.selectbox(
             "Bonus adverse redouté",
@@ -177,10 +179,11 @@ def afficher_adversaire(df, cols_journees):
     separateur("TERRAIN")
 
     domicile = st.radio(
-        "",
+        "Terrain",
         ["Domicile", "Extérieur"],
         horizontal=True,
-        key="domicile"
+        key="domicile",
+        label_visibility="collapsed"
     ) == "Domicile"
 
     if st.button("Lancer la simulation", type="primary"):

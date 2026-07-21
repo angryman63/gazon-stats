@@ -18,13 +18,17 @@ div[data-testid="stRadio"] label p {
 .st-key-mercato_taille_ligue [data-testid="stRadioGroup"],
 .st-key-mercato_strategie [data-testid="stRadioGroup"],
 .st-key-strategie_jeu [data-testid="stRadioGroup"],
-.st-key-mode_analyse [data-testid="stRadioGroup"] {
+.st-key-mode_analyse [data-testid="stRadioGroup"],
+.st-key-importance [data-testid="stRadioGroup"],
+.st-key-domicile [data-testid="stRadioGroup"] {
     gap: 6px;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"],
 .st-key-mercato_strategie [data-testid="stRadioOption"],
 .st-key-strategie_jeu [data-testid="stRadioOption"],
-.st-key-mode_analyse [data-testid="stRadioOption"] {
+.st-key-mode_analyse [data-testid="stRadioOption"],
+.st-key-importance [data-testid="stRadioOption"],
+.st-key-domicile [data-testid="stRadioOption"] {
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
@@ -34,26 +38,34 @@ div[data-testid="stRadio"] label p {
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"]:hover,
 .st-key-mercato_strategie [data-testid="stRadioOption"]:hover,
 .st-key-strategie_jeu [data-testid="stRadioOption"]:hover,
-.st-key-mode_analyse [data-testid="stRadioOption"]:hover {
+.st-key-mode_analyse [data-testid="stRadioOption"]:hover,
+.st-key-importance [data-testid="stRadioOption"]:hover,
+.st-key-domicile [data-testid="stRadioOption"]:hover {
     background-color: rgba(200, 168, 75, 0.08);
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"][data-selected="true"],
 .st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"],
 .st-key-strategie_jeu [data-testid="stRadioOption"][data-selected="true"],
-.st-key-mode_analyse [data-testid="stRadioOption"][data-selected="true"] {
+.st-key-mode_analyse [data-testid="stRadioOption"][data-selected="true"],
+.st-key-importance [data-testid="stRadioOption"][data-selected="true"],
+.st-key-domicile [data-testid="stRadioOption"][data-selected="true"] {
     background-color: rgba(200, 168, 75, 0.18);
     border-color: #c8a84b;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"] > div > div > div:first-child,
 .st-key-mercato_strategie [data-testid="stRadioOption"] > div > div > div:first-child,
 .st-key-strategie_jeu [data-testid="stRadioOption"] > div > div > div:first-child,
-.st-key-mode_analyse [data-testid="stRadioOption"] > div > div > div:first-child {
+.st-key-mode_analyse [data-testid="stRadioOption"] > div > div > div:first-child,
+.st-key-importance [data-testid="stRadioOption"] > div > div > div:first-child,
+.st-key-domicile [data-testid="stRadioOption"] > div > div > div:first-child {
     display: none;
 }
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
 .st-key-mercato_strategie [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
 .st-key-strategie_jeu [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
-.st-key-mode_analyse [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
+.st-key-mode_analyse [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
+.st-key-importance [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
+.st-key-domicile [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
     font-family: 'Oswald', sans-serif !important;
     font-weight: 600 !important;
     letter-spacing: 0.03em;
@@ -64,12 +76,25 @@ div[data-testid="stRadio"] label p {
 .st-key-mercato_taille_ligue [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
 .st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
 .st-key-strategie_jeu [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
-.st-key-mode_analyse [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p {
+.st-key-mode_analyse [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
+.st-key-importance [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
+.st-key-domicile [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p {
     color: #c8a84b !important;
     font-weight: 700 !important;
 }
 
 /* ── Zones de texte "Simuler le match" : Titulaires / Remplaçants / Joueurs adverses ── */
+.st-key-mes_titu label[data-testid="stWidgetLabel"],
+.st-key-mes_rempl label[data-testid="stWidgetLabel"],
+.st-key-adv_titu label[data-testid="stWidgetLabel"],
+.st-key-adv_rempl label[data-testid="stWidgetLabel"],
+.st-key-adv_joueurs label[data-testid="stWidgetLabel"] {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
 .st-key-mes_titu label[data-testid="stWidgetLabel"] p,
 .st-key-mes_rempl label[data-testid="stWidgetLabel"] p,
 .st-key-adv_titu label[data-testid="stWidgetLabel"] p,
@@ -96,20 +121,37 @@ div[data-testid="stRadio"] label p {
     box-shadow: 0 0 0 2px rgba(200, 168, 75, 0.15);
 }
 
-/* ── Labels "Stratégie de jeu" / "Mode d'analyse" (Simuler le match) ── */
+/* ── Labels des groupes en pilules (Simuler le match) ── */
 .st-key-strategie_jeu label[data-testid="stWidgetLabel"] p,
-.st-key-mode_analyse label[data-testid="stWidgetLabel"] p {
+.st-key-mode_analyse label[data-testid="stWidgetLabel"] p,
+.st-key-importance label[data-testid="stWidgetLabel"] p,
+.st-key-domicile label[data-testid="stWidgetLabel"] p {
     font-family: 'Raleway', sans-serif !important;
     font-weight: 500 !important;
     color: rgba(200, 168, 75, 0.85) !important;
 }
 
-/* ── Titres "Mon équipe" / "Équipe adverse" (Simuler le match) ── */
+/* ── Titres de section h3 (Simuler le match) : équipes + bonus ── */
 h3#mon-equipe,
-h3#equipe-adverse {
+h3#equipe-adverse,
+h3#bonus-disponibles,
+h3#bonus-adverses {
     font-family: 'Oswald', sans-serif !important;
     font-weight: 700 !important;
     color: #c8a84b !important;
+}
+
+/* ── Menu déroulant "Bonus adverse redouté" (Simuler le match) ── */
+.st-key-bonus_adv_restant label[data-testid="stWidgetLabel"] p {
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: rgba(200, 168, 75, 0.75) !important;
+}
+.st-key-bonus_adv_restant input[role="combobox"] {
+    font-family: 'Raleway', sans-serif !important;
 }
 
 /* ── Onglets de poste (Mercato + Conseiller Hebdo) : Attaquants / Milieux / ... ── */
