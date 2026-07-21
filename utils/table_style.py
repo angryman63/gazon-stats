@@ -71,10 +71,13 @@ div[data-testid="stRadio"] label p {
 .gs-page-title {
     font-family: 'Oswald', sans-serif;
     font-weight: 700;
-    font-size: 1.9em;
+    font-size: 2.1em;
     color: #ffffff;
     letter-spacing: 0.5px;
-    margin: 0 0 14px 0;
+    margin: 0 0 18px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #c8a84b;
+    display: inline-block;
 }
 .gs-dash { color: #555555; }
 

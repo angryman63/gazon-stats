@@ -96,6 +96,7 @@ def _table_html(df):
 
 def afficher_mercato(df, cols_journees):
     inject_style()
+    st.markdown('<h2 class="gs-page-title">Mercato</h2>', unsafe_allow_html=True)
     separateur("TAILLE DE LA LIGUE")
     # --- Sélecteur de taille de ligue ---
     taille_choisie = st.radio(
