@@ -50,39 +50,54 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     border-bottom: 1px solid #c8a84b44;
 }
 
-/* Onglets */
-.stTabs [data-baseweb="tab-list"] {
-    background-color: #1a1a1a;
-    border: 1px solid #2a2a2a;
-    border-radius: 10px;
-    gap: 6px;
-    padding: 6px;
+/* Onglets de navigation principaux (Accueil / Conseiller hebdo / Mercato / Simuler le match) */
+.st-key-nav_tabs .react-aria-SelectionIndicator {
+    display: none !important;
 }
 
-.stTabs [data-baseweb="tab"] {
-    background-color: transparent;
-    color: #888888;
-    border-radius: 8px;
-    font-family: 'Oswald', sans-serif;
-    font-weight: 600;
-    font-size: 0.95rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 10px 22px;
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+.st-key-nav_tabs > div > [role="tablist"] {
+    background-color: #1a1a1a !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 10px !important;
+    padding: 6px !important;
+    gap: 6px !important;
 }
 
-.stTabs [data-baseweb="tab"]:hover {
-    color: #d9bd6e;
-    background-color: #c8a84b14;
+.st-key-nav_tabs > div > [role="tablist"] > [data-testid="stTab"] {
+    position: relative !important;
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.62) !important;
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 0 24px !important;
+    border-radius: 8px !important;
+    border-bottom: none !important;
+    transition: color 0.25s ease, background-color 0.25s ease !important;
 }
 
-.stTabs [aria-selected="true"] {
-    background-color: #c8a84b22;
+.st-key-nav_tabs > div > [role="tablist"] > [data-testid="stTab"]:hover {
+    color: rgba(255, 255, 255, 0.92) !important;
+    background-color: #c8a84b14 !important;
+}
+
+.st-key-nav_tabs > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"] {
     color: #c8a84b !important;
-    font-weight: 700;
-    border-bottom: 2px solid #c8a84b;
+    background-color: #c8a84b22 !important;
+    font-weight: 700 !important;
+}
+
+.st-key-nav_tabs > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 4px;
+    height: 3px;
+    border-radius: 3px;
+    background-color: #c8a84b;
 }
 
 /* DataFrames */
@@ -286,7 +301,7 @@ page0, page1, page2, page3 = st.tabs([
     "Conseiller hebdo",
     "Mercato",
     "Simuler le match"
-])
+], key="nav_tabs")
 
 with page0:
     afficher_accueil()
