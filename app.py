@@ -134,7 +134,7 @@ hr {
 .mt-topband-wordmark {
     font-family: 'Oswald', sans-serif;
     font-weight: 700;
-    font-size: 32px;
+    font-size: 17px;
     color: #c8a84b;
     letter-spacing: 0.35em;
     text-transform: uppercase;

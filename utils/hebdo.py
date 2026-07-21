@@ -99,7 +99,6 @@ def _formater_cellule_hebdo(col, val):
 
 def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
     inject_style()
-    st.markdown('<h2 class="gs-page-title">Conseiller Hebdo</h2>', unsafe_allow_html=True)
 
     scores = []
     for idx, row in df.iterrows():
@@ -138,6 +137,8 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
     if filtrer and mes_joueurs_input.strip():
         mes_joueurs = [j.strip().lower() for j in mes_joueurs_input.split('\n') if j.strip()]
         df_mes_joueurs = df_scores[df_scores['Joueur'].str.lower().isin(mes_joueurs)]
+
+    st.markdown('<h2 class="gs-page-title">Recommandations par poste</h2>', unsafe_allow_html=True)
 
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
