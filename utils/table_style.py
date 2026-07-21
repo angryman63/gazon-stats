@@ -142,6 +142,14 @@ div[data-testid="stButton"] > button[kind="primary"]:hover {
     opacity: 0.85 !important;
 }
 
+/* ── Bouton "Valider" (sidebar) — même typographie que le bouton de simulation ── */
+.st-key-btn_valider_joueurs button {
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+}
+
 .gs-roster {
     display: flex;
     flex-direction: column;
