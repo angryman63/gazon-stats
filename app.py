@@ -120,6 +120,31 @@ hr {
 }
 
 /* ============================================================
+   BANDEAU MAESTRO TACTICO (wordmark, au-dessus des onglets)
+   ============================================================ */
+
+.mt-topband {
+    text-align: center;
+    padding: 18px 16px 12px 16px;
+}
+
+.mt-topband-wordmark {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #c8a84b;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.mt-topband-line {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #c8a84b, transparent);
+    margin: 0 0 6px 0;
+}
+
+/* ============================================================
    PAGE D'ACCUEIL
    ============================================================ */
 
@@ -409,6 +434,16 @@ with st.sidebar:
 # ============================================================
 # NAVIGATION — ONGLETS
 # ============================================================
+
+st.markdown(
+    """
+    <div class="mt-topband">
+      <div class="mt-topband-wordmark">MAESTRO TACTICO</div>
+    </div>
+    <div class="mt-topband-line"></div>
+    """,
+    unsafe_allow_html=True
+)
 
 page0, page1, page2, page3 = st.tabs([
     "Accueil",
