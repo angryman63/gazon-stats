@@ -140,7 +140,7 @@ def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
 
     with st.expander("🏥 Légende blessures"):
         st.markdown("""
-| Emoji | Statut |
+|  | Statut |
 |---|---|
 | 🚑 | Blessé — 8+ matchs manqués |
 | 🩹 | Blessé — moins de 8 matchs manqués |

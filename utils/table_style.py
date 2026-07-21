@@ -113,6 +113,14 @@ div[data-testid="stRadio"] label p {
 [role="listbox"] [role="option"] {
     font-family: 'Raleway', sans-serif !important;
 }
+[class*="st-key-tri_col_"] label[data-testid="stWidgetLabel"] p {
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: rgba(200, 168, 75, 0.75) !important;
+}
 
 /* ── Sélecteur d'ordre de tri (↓ / ↑) à côté de "Trier par" ── */
 [class*="st-key-tri_ordre_"] [data-testid="stRadioGroup"] {
