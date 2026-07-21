@@ -239,16 +239,6 @@ def afficher_mercato(df, cols_journees):
 | 🐢 | Retour de blessure — 4 à 7 matchs d'absence |
 """)
 
-    with st.expander("Légende — indicateur de demande"):
-        st.markdown("""
-| Demande |
-|---|
-| 🔥🔥 Très demandé |
-| 🔥 Demandé |
-| Peu demandé |
-| Indésirable |
-""")
-
     cols_affichage = ['Joueur', 'Poste', 'Cote', 'Enchere', 'Tension',
                        'Note', 'Buts', '%Titu', 'Matchs_joues', 'Alerte']
 
