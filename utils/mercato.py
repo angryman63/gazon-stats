@@ -251,10 +251,6 @@ def afficher_mercato(df, cols_journees):
 
     if strategie_choisie == "À éviter":
         st.subheader("Joueurs chers mais décevants")
-        st.markdown(
-            f'<p class="gs-caption">Enchères affichées pour : {taille_choisie}</p>',
-            unsafe_allow_html=True
-        )
         df_eviter['Raison'] = df_eviter.apply(lambda row:
             "Cher + peu de matchs" if row['Matchs_joues'] < seuil_matchs
             else "Cher + note décevante", axis=1
@@ -269,10 +265,6 @@ def afficher_mercato(df, cols_journees):
         )
     else:
         strategie_key, df_s = strategie_map[strategie_choisie]
-        st.markdown(
-            f'<p class="gs-caption">Enchères affichées pour : {taille_choisie}</p>',
-            unsafe_allow_html=True
-        )
         postes = {
             'A': 'Attaquants', 'MO': 'Milieux Off.',
             'MD': 'Milieux Déf.', 'DC': 'Défenseurs C.',

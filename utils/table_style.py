@@ -209,7 +209,7 @@ h3#bonus-adverses,
 }
 
 /* ── Sélecteur "Trier par" : texte en Raleway (valeur affichée + options du menu) ── */
-[class*="st-key-tri_col_"] input[role="combobox"] {
+[class*="st-key-tri_col_"] [data-testid="stSelectbox"] * {
     font-family: 'Raleway', sans-serif !important;
 }
 [role="listbox"] [role="option"] {
@@ -288,15 +288,10 @@ h3#bonus-adverses,
     font-family: 'Oswald', sans-serif !important;
     font-weight: 600 !important;
     letter-spacing: 0.02em;
+    color: #c8a84b !important;
 }
 [data-testid="stExpander"] table {
     font-family: 'Raleway', sans-serif !important;
-}
-.gs-caption {
-    color: #c8a84b;
-    font-size: 0.85em;
-    margin-top: -6px;
-    margin-bottom: 10px;
 }
 .gs-table-wrap {
     max-height: 440px;
