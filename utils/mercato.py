@@ -102,7 +102,8 @@ def afficher_mercato(df, cols_journees):
         "Taille de la ligue :",
         list(TAILLES_LIGUE.keys()),
         horizontal=True,
-        key="mercato_taille_ligue"
+        key="mercato_taille_ligue",
+        label_visibility="collapsed"
     )
     col_enchere, col_achat = _colonnes_taille(df, taille_choisie)
 
@@ -223,7 +224,9 @@ def afficher_mercato(df, cols_journees):
     strategie_choisie = st.radio(
         "Stratégie mercato :",
         ["Stars", "Valeurs sûres", "Équilibre", "Pépites", "À éviter"],
-        horizontal=True
+        horizontal=True,
+        key="mercato_strategie",
+        label_visibility="collapsed"
     )
 
     with st.expander("🏥 Légende blessures"):
@@ -285,7 +288,7 @@ def afficher_mercato(df, cols_journees):
             'MD': 'Milieux Déf.', 'DC': 'Défenseurs C.',
             'DL': 'Défenseurs L.', 'G': 'Gardiens'
         }
-        tabs = st.tabs(list(postes.values()))
+        tabs = st.tabs(list(postes.values()), key="mercato_postes")
         for tab, (code, nom) in zip(tabs, postes.items()):
             with tab:
                 if strategie_key == 'stars' and code == 'DC':

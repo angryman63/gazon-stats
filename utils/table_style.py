@@ -11,6 +11,92 @@ div[data-testid="stRadio"] > div {
 div[data-testid="stRadio"] label p {
     color: #f5f5f5 !important;
 }
+
+/* ── Sélecteurs Mercato : taille de ligue / stratégie (pilules or) ── */
+.st-key-mercato_taille_ligue [data-testid="stRadioGroup"],
+.st-key-mercato_strategie [data-testid="stRadioGroup"] {
+    gap: 6px;
+}
+.st-key-mercato_taille_ligue [data-testid="stRadioOption"],
+.st-key-mercato_strategie [data-testid="stRadioOption"] {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 6px 16px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.st-key-mercato_taille_ligue [data-testid="stRadioOption"]:hover,
+.st-key-mercato_strategie [data-testid="stRadioOption"]:hover {
+    background-color: rgba(200, 168, 75, 0.08);
+}
+.st-key-mercato_taille_ligue [data-testid="stRadioOption"][data-selected="true"],
+.st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"] {
+    background-color: rgba(200, 168, 75, 0.18);
+    border-color: #c8a84b;
+}
+.st-key-mercato_taille_ligue [data-testid="stRadioOption"] > div > div > div:first-child,
+.st-key-mercato_strategie [data-testid="stRadioOption"] > div > div > div:first-child {
+    display: none;
+}
+.st-key-mercato_taille_ligue [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
+.st-key-mercato_strategie [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.03em;
+    color: rgba(255, 255, 255, 0.75) !important;
+    margin: 0 !important;
+    transition: color 0.2s ease;
+}
+.st-key-mercato_taille_ligue [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,
+.st-key-mercato_strategie [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p {
+    color: #c8a84b !important;
+    font-weight: 700 !important;
+}
+
+/* ── Onglets de poste Mercato (Attaquants / Milieux / ...) ── */
+.st-key-mercato_postes .react-aria-SelectionIndicator {
+    display: none !important;
+}
+.st-key-mercato_postes > div > [role="tablist"] {
+    background-color: #1a1a1a !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 10px !important;
+    padding: 6px !important;
+    gap: 6px !important;
+}
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"] {
+    position: relative !important;
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.62) !important;
+    font-family: 'Oswald', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    padding: 0 18px !important;
+    border-radius: 8px !important;
+    border-bottom: none !important;
+    transition: color 0.25s ease, background-color 0.25s ease !important;
+}
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"]:hover {
+    color: rgba(255, 255, 255, 0.92) !important;
+    background-color: rgba(200, 168, 75, 0.08) !important;
+}
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"] {
+    color: #c8a84b !important;
+    background-color: rgba(200, 168, 75, 0.13) !important;
+    font-weight: 700 !important;
+}
+.st-key-mercato_postes > div > [role="tablist"] > [data-testid="stTab"][aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 4px;
+    height: 2px;
+    border-radius: 2px;
+    background-color: #c8a84b;
+}
 .gs-caption {
     color: #c8a84b;
     font-size: 0.85em;
