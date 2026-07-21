@@ -101,6 +101,7 @@ div[data-testid="stRadio"] label p {
 .st-key-adv_rempl label[data-testid="stWidgetLabel"] p,
 .st-key-adv_joueurs label[data-testid="stWidgetLabel"] p {
     font-family: 'Raleway', sans-serif !important;
+    color: rgba(255, 255, 255, 0.75) !important;
 }
 .st-key-mes_titu [data-testid="stTextAreaRootElement"],
 .st-key-mes_rempl [data-testid="stTextAreaRootElement"],
@@ -124,32 +125,34 @@ div[data-testid="stRadio"] label p {
 /* ── Labels des groupes en pilules (Simuler le match) ── */
 .st-key-strategie_jeu label[data-testid="stWidgetLabel"] p,
 .st-key-mode_analyse label[data-testid="stWidgetLabel"] p,
-.st-key-importance label[data-testid="stWidgetLabel"] p,
 .st-key-domicile label[data-testid="stWidgetLabel"] p {
     font-family: 'Raleway', sans-serif !important;
     font-weight: 500 !important;
     color: rgba(200, 168, 75, 0.85) !important;
 }
 
-/* ── Titres de section h3 (Simuler le match) : équipes + bonus ── */
+/* ── Titres de section h3 (Simuler le match) : équipes ── */
 h3#mon-equipe,
-h3#equipe-adverse,
-h3#bonus-disponibles,
-h3#bonus-adverses {
+h3#equipe-adverse {
     font-family: 'Oswald', sans-serif !important;
     font-weight: 700 !important;
     color: #c8a84b !important;
 }
 
-/* ── Menu déroulant "Bonus adverse redouté" (Simuler le match) ── */
+/* ── Titres uniformisés : Bonus disponibles / Bonus adverses / Importance du match / Bonus adverse redouté ── */
+h3#bonus-disponibles,
+h3#bonus-adverses,
+.st-key-importance label[data-testid="stWidgetLabel"] p,
 .st-key-bonus_adv_restant label[data-testid="stWidgetLabel"] p {
     font-family: 'Oswald', sans-serif !important;
-    font-weight: 600 !important;
-    font-size: 0.72rem !important;
-    letter-spacing: 0.1em !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
-    color: rgba(200, 168, 75, 0.75) !important;
+    color: #c8a84b !important;
 }
+
+/* ── Menu déroulant "Bonus adverse redouté" (Simuler le match) ── */
 .st-key-bonus_adv_restant input[role="combobox"] {
     font-family: 'Raleway', sans-serif !important;
 }
@@ -211,6 +214,18 @@ h3#bonus-adverses {
 }
 [role="listbox"] [role="option"] {
     font-family: 'Raleway', sans-serif !important;
+}
+[role="listbox"] [role="option"] [data-item-hl] {
+    background-color: transparent !important;
+    border-radius: 6px;
+    transition: background-color 0.15s ease;
+}
+[role="listbox"] [role="option"]:hover [data-item-hl],
+[role="listbox"] [role="option"][data-focused="true"] [data-item-hl] {
+    background-color: rgba(200, 168, 75, 0.18) !important;
+}
+[role="listbox"] [role="option"][aria-selected="true"] [data-item-hl] {
+    color: #c8a84b !important;
 }
 [class*="st-key-tri_col_"] label[data-testid="stWidgetLabel"] p {
     font-family: 'Oswald', sans-serif !important;

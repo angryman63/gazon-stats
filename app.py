@@ -64,6 +64,12 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     color: #f5f5f5 !important;
 }
 
+/* Label "Joueurs (un par ligne)" (sidebar) */
+.st-key-mes_joueurs_textarea label[data-testid="stWidgetLabel"] p {
+    font-family: 'Raleway', sans-serif !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
 /* Case "Afficher uniquement mes joueurs" */
 [data-testid="stCheckbox"] label > div:first-of-type {
     background-color: #1a1a1a !important;
@@ -82,6 +88,7 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
 }
 
 [data-testid="stCheckbox"] [data-testid="stMarkdownContainer"] p {
+    font-family: 'Raleway', sans-serif !important;
     color: #e8e8e8 !important;
 }
 
@@ -222,7 +229,7 @@ hr {
 
 LOGO_HTML = """
 <div style="padding:10px 4px 6px 4px;">
-  <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:#c8a84b; letter-spacing:3px; line-height:1;">MT</div>
+  <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; color:#c8a84b; letter-spacing:2px; line-height:1;">MT</div>
   <div style="width:100%; height:1px; background:linear-gradient(to right,#c8a84b,transparent); margin:5px 0;"></div>
   <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:11px; color:#ffffff; letter-spacing:4px; opacity:0.9;">MAESTRO TACTICO</div>
 </div>
@@ -318,7 +325,7 @@ with st.sidebar:
     filtrer = st.checkbox("Afficher uniquement mes joueurs", value=False)
     st.markdown("---")
     st.markdown(
-        "<div style='font-family:Inter,sans-serif; font-size:11px; color:#444444; text-align:center;'>"
+        "<div style='font-family:Inter,sans-serif; font-size:11px; color:rgba(255,255,255,0.55); text-align:center;'>"
         "maestrotactico.fr<br>contact@maestrotactico.fr"
         "</div>",
         unsafe_allow_html=True
