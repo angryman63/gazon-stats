@@ -104,13 +104,11 @@ def afficher_adversaire(df, cols_journees):
         st.subheader("Mon équipe")
         mes_titu = st.text_area(
             "Titulaires (un par ligne)",
-            placeholder="Koffi\nBalerdi\nOkoh\nCoppola\nMoreira\nTolisso\nThomasson\nKebbal\nGreenwood\nBarcola\nThauvin",
             height=250,
             key="mes_titu"
         )
         mes_remplacants = st.text_area(
             "Remplaçants (un par ligne)",
-            placeholder="Safonov\nGradit\nRongier\nFofana",
             height=150,
             key="mes_rempl"
         )
@@ -133,7 +131,6 @@ def afficher_adversaire(df, cols_journees):
         else:
             adv_joueurs = st.text_area(
                 "Joueurs adverses disponibles (un par ligne)",
-                placeholder="Descamps\nChardonnet\nDiomandé\nUdol\nGboho\nAndré\nSinayoko\nLepaul",
                 height=400,
                 key="adv_joueurs"
             )
@@ -143,14 +140,14 @@ def afficher_adversaire(df, cols_journees):
 
     with col_b1:
         st.subheader("Bonus disponibles")
-        mes_bonus_dispo = st.multiselect(
+        mes_bonus_dispo = st.selectbox(
             "Bonus disponibles",
-            liste_bonus,
+            ["Aucun"] + liste_bonus,
             key="mes_bonus_dispo",
             label_visibility="collapsed"
         )
         joueur_uber = None
-        if any("Uber Eats" in b for b in mes_bonus_dispo):
+        if "Uber Eats" in mes_bonus_dispo:
             joueur_uber = st.text_input(
                 "Joueur boosté par Uber Eats :",
                 key="joueur_uber"
@@ -164,9 +161,9 @@ def afficher_adversaire(df, cols_journees):
 
     with col_b2:
         st.subheader("Bonus adverses")
-        bonus_adv_utilises = st.multiselect(
+        bonus_adv_utilises = st.selectbox(
             "Bonus adverses disponibles",
-            liste_bonus,
+            ["Aucun"] + liste_bonus,
             key="bonus_adv_utilises",
             label_visibility="collapsed"
         )
@@ -313,12 +310,12 @@ def afficher_adversaire(df, cols_journees):
 
         separateur("RECOMMANDATION MAESTRO TACTICO")
 
-        if mes_bonus_dispo:
-            st.markdown("**Impact de chaque bonus disponible :**")
+        if mes_bonus_dispo != "Aucun":
+            st.markdown("**Impact du bonus sélectionné :**")
 
             resultats_bonus = {}
             with st.spinner("Test des bonus en cours..."):
-                for bonus in mes_bonus_dispo:
+                for bonus in [mes_bonus_dispo]:
                     bonus_key = bonus_key_map.get(bonus, None)
                     res_b = monte_carlo_match(
                         joueurs_moi_mc, joueurs_adv_mc,
