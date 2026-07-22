@@ -375,7 +375,7 @@ with page1:
     afficher_hebdo(df, cols_journees, df_n1, cols_journees_n1, journee_actuelle, st.session_state["mes_joueurs_input"], filtrer)
 
 with page2:
-    afficher_mercato(df, cols_journees)
+    afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuelle)
 
 with page3:
     afficher_adversaire(df, cols_journees)

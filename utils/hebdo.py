@@ -4,6 +4,7 @@ import numpy as np
 from modele import (
     nettoyer_note, calculer_clutch, predire_note, alerte_blessure, etiquette_regularite,
     absences_consecutives, predire_note_hybride, get_bandeau_avertissement, trouver_historique_n1,
+    compter_matchs, poids_phase,
 )
 from utils.table_style import inject_style, pill, dash, name_cell, table_html, separateur
 
@@ -122,8 +123,14 @@ def afficher_hebdo(df, cols_journees, df_n1, cols_journees_n1, journee_actuelle,
         regularite_brute = 1 / (1 + np.std(six_derniers)) if six_derniers else 0
         prob_jouer = row['%Titu'] / 100 if '%Titu' in df.columns else 0.8
         moyenne_saison = float(row['Note']) if 'Note' in df.columns else note_forme
-        score = (moyenne_saison * 0.5 + note_forme * 0.3 +
-                 regularite_brute * 0.1 + prob_jouer * 0.1)
+
+        # Pondération dynamique de la formule "Recommandé" en début de saison :
+        # t = poids_actuelle (poids_phase) ramène progressivement la formule vers
+        # 0.5/0.3/0.1/0.1 (formule de référence, saison mûre) à mesure que t -> 1.
+        matchs_joues = compter_matchs(row, cols_journees)
+        _, t = poids_phase(matchs_joues, journee_actuelle)
+        score = (moyenne_saison * (0.5 * t) + note_forme * (1 - 0.7 * t) +
+                 regularite_brute * (0.1 * t) + prob_jouer * (0.1 * t))
         scores.append({
             'Joueur': row['Joueur'],
             'Poste': row['Poste'],

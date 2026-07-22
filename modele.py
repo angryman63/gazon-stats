@@ -46,7 +46,7 @@ def predire_note(row, cols_journees):
     notes = [row[col] for col in cols_journees if row[col] > 0]
     if len(notes) < 3:
         return None
-    poids = [0.30, 0.23, 0.18, 0.14, 0.10, 0.05]
+    poids = [0.20, 0.19, 0.18, 0.16, 0.14, 0.13]
     notes_6 = notes[:6]
     total_poids = sum(poids[:len(notes_6)])
     return round(sum(n * poids[i] for i, n in enumerate(notes_6)) / total_poids, 2)
