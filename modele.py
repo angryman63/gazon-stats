@@ -66,6 +66,111 @@ def alerte_blessure(row, cols_journees):
             return f"🐢 Retour ({absences} matchs)"
     return ""
 
+def poids_phase(matchs_joues_joueur, journee_calendaire_actuelle):
+    """Retourne (poids_saison_n1, poids_saison_actuelle) selon DEUX critères :
+    - la position du JOUEUR dans la grille progressive, déterminée par le
+      nombre de matchs qu'IL a déjà joués cette saison (et non la journée
+      calendaire), pour ne pas pénaliser/avantager à tort un joueur qui a
+      manqué des matchs (blessure, retard de transfert, etc.) ;
+    - un plafond calendaire dur : au-delà de la journée 8 (journée > 8),
+      la pondération N-1 est TOUJOURS nulle, quel que soit le nombre de
+      matchs du joueur — même s'il s'agit littéralement de son 1er match
+      de la saison, joué tardivement."""
+    if journee_calendaire_actuelle > 8:
+        return (0.0, 1.0)
+    grille = {
+        0: (1.0, 0.0),  # aucun match joué -> comme au tout début (grille J1)
+        1: (1.0, 0.0),
+        2: (0.8, 0.2),
+        3: (0.6, 0.4),
+        4: (0.4, 0.6),
+        5: (0.2, 0.8),
+        6: (0.1, 0.9),
+    }
+    return grille.get(matchs_joues_joueur, (0.0, 1.0))  # 7+ matchs -> 0% N-1
+
+def predire_note_hybride(row_n1, cols_n1, row_actuelle, cols_actuelle, journee_actuelle):
+    """
+    Version hybride de predire_note() pour la transition de début de saison.
+    Réutilise predire_note() sans le modifier : un appel sur les colonnes
+    saison N-1, un appel sur les colonnes saison en cours, puis blend selon
+    la grille progressive — positionnée par le nombre de matchs déjà joués
+    par CE joueur cette saison, plafonnée par la journée calendaire (0% N-1
+    forcé au-delà de J8) — avec repondération automatique si une des deux
+    sources est indisponible.
+
+    Retourne (note, mode) où note peut être None si aucune prédiction n'est
+    possible (aucune donnée exploitable nulle part, ou plafond calendaire
+    atteint sans les 3 notes minimum côté saison actuelle).
+    """
+    matchs_joues = compter_matchs(row_actuelle, cols_actuelle) if row_actuelle is not None else 0
+    poids_n1, poids_actuelle = poids_phase(matchs_joues, journee_actuelle)
+    plafond_calendaire_actif = journee_actuelle > 8
+
+    note_n1 = predire_note(row_n1, cols_n1) if row_n1 is not None else None
+    note_actuelle = predire_note(row_actuelle, cols_actuelle) if row_actuelle is not None else None
+
+    if poids_n1 > 0 and note_n1 is None and poids_actuelle > 0 and note_actuelle is None:
+        return None, "aucune_prediction_possible"
+
+    if poids_n1 > 0 and note_n1 is None:
+        poids_n1, poids_actuelle = 0.0, 1.0
+
+    # Repli automatique vers N-1 si le joueur n'a pas encore de note exploitable
+    # cette saison (ex. blessure) — mais JAMAIS au-delà du plafond calendaire :
+    # passé J8, on ne bascule plus vers N-1, on renvoie "aucune_prediction_possible"
+    # comme le ferait predire_note() seule (cf. règle du débutant tardif).
+    if poids_actuelle > 0 and note_actuelle is None and not plafond_calendaire_actif:
+        poids_n1, poids_actuelle = 1.0, 0.0
+
+    if poids_n1 == 1.0:
+        return (note_n1, "100%_N-1") if note_n1 is not None else (None, "aucune_prediction_possible")
+    if poids_actuelle == 1.0:
+        return (note_actuelle, "100%_actuelle") if note_actuelle is not None else (None, "aucune_prediction_possible")
+
+    note = round(poids_n1 * note_n1 + poids_actuelle * note_actuelle, 2)
+    return note, f"{int(poids_n1 * 100)}%N-1/{int(poids_actuelle * 100)}%actuelle"
+
+def get_prediction_complete(row_n1, cols_n1, row_actuelle, cols_actuelle, journee_actuelle):
+    """
+    Assemble predire_note_hybride() (la note pondérée) et alerte_blessure()
+    (le statut blessure/retour), SANS modifier ni fusionner leur logique
+    interne — les deux fonctions restent indépendantes et réutilisables
+    séparément.
+
+    Retourne (note, mode, alerte).
+    """
+    note, mode = predire_note_hybride(row_n1, cols_n1, row_actuelle, cols_actuelle, journee_actuelle)
+    alerte = alerte_blessure(row_actuelle, cols_actuelle) if row_actuelle is not None else ""
+    return note, mode, alerte
+
+def get_bandeau_avertissement(journee_actuelle):
+    """Retourne le texte du bandeau, ou None à partir de J7.
+    Reste basé sur la journée calendaire globale (avertissement collectif
+    sur la fiabilité en tout début de saison), indépendamment de la
+    logique par-joueur ci-dessus."""
+    if journee_actuelle < 7:
+        return (
+            "⚠️ Moins de 6 journées disputées — les recommandations sont "
+            "basées sur la saison précédente et peuvent être moins précises."
+        )
+    return None
+
+def trouver_historique_n1(nom_joueur, poste, df_n1):
+    """Retrouve la ligne d'un joueur dans le dataframe de la saison N-1, en
+    matchant sur Nom + Poste. Renvoie None si aucune correspondance ou si
+    plusieurs correspondances (homonymes au même poste, ex. "Camara" ou
+    "Coulibaly") : mieux vaut traiter ces cas comme "pas de N-1 fiable"
+    (repli automatique de predire_note_hybride) que de risquer d'attribuer
+    l'historique du mauvais joueur."""
+    correspondances = df_n1[
+        (df_n1['Joueur'].str.strip().str.lower() == str(nom_joueur).strip().lower()) &
+        (df_n1['Poste'] == poste)
+    ]
+    if len(correspondances) == 1:
+        return correspondances.iloc[0]
+    return None
+
 def etiquette_regularite(valeur, q10, q50, q80):
     if valeur >= q80:
         return "Métronome"
