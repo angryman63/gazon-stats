@@ -250,7 +250,12 @@ def afficher_mercato(df, cols_journees):
     }
 
     if strategie_choisie == "À éviter":
-        st.subheader("Joueurs chers mais décevants")
+        st.markdown(
+            '<div style="font-family:\'Oswald\',sans-serif; font-weight:700; '
+            'font-size:1.05rem; letter-spacing:0.04em; text-transform:uppercase; '
+            'color:#c8a84b; margin:0.4rem 0 0.8rem;">Joueurs chers mais décevants</div>',
+            unsafe_allow_html=True
+        )
         df_eviter['Raison'] = df_eviter.apply(lambda row:
             "Cher + peu de matchs" if row['Matchs_joues'] < seuil_matchs
             else "Cher + note décevante", axis=1
