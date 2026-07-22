@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from modele import nettoyer_note, calculer_clutch, compter_matchs, absences_consecutives, alerte_blessure
+from modele import (
+    nettoyer_note, calculer_clutch, compter_matchs, absences_consecutives, alerte_blessure,
+    predire_note_hybride, trouver_historique_n1,
+)
 from utils.table_style import inject_style, pill, dash, name_cell, table_html, separateur
 
 # ---------------------------------------------------------------------------
@@ -94,7 +97,7 @@ def _table_html(df):
     return table_html(df, _formater_cellule)
 
 
-def afficher_mercato(df, cols_journees):
+def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuelle):
     inject_style()
     separateur("TAILLE DE LA LIGUE")
     # --- Sélecteur de taille de ligue ---
@@ -301,5 +304,18 @@ def afficher_mercato(df, cols_journees):
                         ),
                         unsafe_allow_html=True
                     )
+                    if code == 'G':
+                        for idx_gardien in top.index:
+                            row_actuelle = df.loc[idx_gardien]
+                            row_n1 = trouver_historique_n1(row_actuelle['Joueur'], row_actuelle['Poste'], df_n1)
+                            _, mode_gardien = predire_note_hybride(
+                                row_n1, cols_journees_n1, row_actuelle, cols_journees, journee_actuelle
+                            )
+                            if mode_gardien not in (None, "100%_actuelle", "aucune_prediction_possible"):
+                                st.warning(
+                                    f"**{row_actuelle['Joueur']}** — ⚠️ Note basée en grande partie sur la "
+                                    "saison précédente — vérifiez que ce gardien reste bien titulaire cette "
+                                    "saison avant de miser dessus."
+                                )
                 else:
                     st.info("Aucun joueur disponible")
