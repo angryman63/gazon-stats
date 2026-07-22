@@ -24,6 +24,14 @@ def calculer_clutch(row, cols_journees, seuil=7):
 def compter_matchs(row, cols_journees):
     return sum(1 for col in cols_journees if row[col] > 0)
 
+def determiner_journee_actuelle(df, cols_journees):
+    """Déduit la journée calendaire actuelle directement des données : une
+    journée pas encore jouée a sa colonne à 0 pour tous les joueurs, une
+    journée déjà jouée a forcément au moins un joueur noté. Recalculée à
+    chaque rafraîchissement des données (jamais codée en dur)."""
+    journees_jouees = [int(col[1:]) for col in cols_journees if (df[col] > 0).any()]
+    return max(journees_jouees) if journees_jouees else 0
+
 def absences_consecutives(row, cols_journees):
     notes = [row[col] for col in cols_journees]
     count = 0
