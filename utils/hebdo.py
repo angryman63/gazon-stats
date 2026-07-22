@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from modele import nettoyer_note, calculer_clutch, predire_note, alerte_blessure, etiquette_regularite, absences_consecutives
+from modele import (
+    nettoyer_note, calculer_clutch, predire_note, alerte_blessure, etiquette_regularite,
+    absences_consecutives, predire_note_hybride, get_bandeau_avertissement, trouver_historique_n1,
+)
 from utils.table_style import inject_style, pill, dash, name_cell, table_html, separateur
 
 
@@ -98,31 +101,39 @@ def _formater_cellule_hebdo(col, val):
     return str(val)
 
 
-def afficher_hebdo(df, cols_journees, mes_joueurs_input, filtrer):
+def afficher_hebdo(df, cols_journees, df_n1, cols_journees_n1, journee_actuelle, mes_joueurs_input, filtrer):
     inject_style()
+
+    bandeau = get_bandeau_avertissement(journee_actuelle)
+    if bandeau:
+        st.warning(bandeau)
 
     scores = []
     for idx, row in df.iterrows():
+        row_n1 = trouver_historique_n1(row['Joueur'], row['Poste'], df_n1)
+        note_forme, mode_forme = predire_note_hybride(
+            row_n1, cols_journees_n1, row, cols_journees, journee_actuelle
+        )
+        if note_forme is None:
+            continue
+
         notes_jouees = [row[col] for col in cols_journees if row[col] > 0]
-        if len(notes_jouees) >= 6:
-            six_derniers = notes_jouees[:6]
-            moyenne = np.mean(six_derniers)
-            ecart_type = np.std(six_derniers)
-            regularite_brute = 1 / (1 + ecart_type)
-            prob_jouer = row['%Titu'] / 100 if '%Titu' in df.columns else 0.8
-            moyenne_saison = float(row['Note']) if 'Note' in df.columns else moyenne
-            score = (moyenne_saison * 0.5 + moyenne * 0.3 +
-                     regularite_brute * 0.1 + prob_jouer * 0.1)
-            scores.append({
-                'Joueur': row['Joueur'],
-                'Poste': row['Poste'],
-                'Club': row['Club'],
-                'Note saison': round(moyenne_saison, 2),
-                'Forme 6J': round(float(moyenne), 2),
-                '_regularite_brute': regularite_brute,
-                '% Titulaire': f"{int(prob_jouer*100)}%",
-                '_score': round(float(score), 2)
-            })
+        six_derniers = notes_jouees[:6]
+        regularite_brute = 1 / (1 + np.std(six_derniers)) if six_derniers else 0
+        prob_jouer = row['%Titu'] / 100 if '%Titu' in df.columns else 0.8
+        moyenne_saison = float(row['Note']) if 'Note' in df.columns else note_forme
+        score = (moyenne_saison * 0.5 + note_forme * 0.3 +
+                 regularite_brute * 0.1 + prob_jouer * 0.1)
+        scores.append({
+            'Joueur': row['Joueur'],
+            'Poste': row['Poste'],
+            'Club': row['Club'],
+            'Note saison': round(moyenne_saison, 2),
+            'Forme 6J': round(float(note_forme), 2),
+            '_regularite_brute': regularite_brute,
+            '% Titulaire': f"{int(prob_jouer*100)}%",
+            '_score': round(float(score), 2)
+        })
 
     df_scores = pd.DataFrame(scores)
 
