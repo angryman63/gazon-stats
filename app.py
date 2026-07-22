@@ -9,7 +9,7 @@ import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from modele import nettoyer_note
+from modele import nettoyer_note, determiner_journee_actuelle
 from utils.accueil import afficher_accueil
 from utils.hebdo import afficher_hebdo
 from utils.mercato import afficher_mercato
@@ -234,10 +234,16 @@ with st.sidebar:
     st.markdown("---")
 
 # ============================================================
-# URL GITHUB — FICHIER JOUEURS FUSIONNÉ
+# URL GITHUB — FICHIER JOUEURS FUSIONNÉ (saison en cours)
 # ============================================================
 
 GITHUB_URL = "https://raw.githubusercontent.com/angryman63/gazon-stats/main/joueurs_fusionne.xlsx"
+
+# ============================================================
+# RÉFÉRENCE SAISON N-1 (25-26) — fichier statique, figé, jamais régénéré
+# ============================================================
+
+FICHIER_N1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "n1", "joueurs_fusionne_25-26.xlsx")
 
 # ============================================================
 # CHARGEMENT AUTOMATIQUE DEPUIS GITHUB
@@ -249,6 +255,10 @@ def charger_depuis_github(url: str):
     response.raise_for_status()
     df = pd.read_excel(io.BytesIO(response.content))
     return df
+
+@st.cache_data(show_spinner=False)
+def charger_reference_n1(chemin: str):
+    return pd.read_excel(chemin)
 
 # ============================================================
 # LOGIQUE PRINCIPALE
@@ -268,6 +278,7 @@ if not donnees_chargees:
     try:
         df_raw = charger_depuis_github(GITHUB_URL)
         st.session_state["df_joueurs"] = df_raw
+        st.session_state["df_joueurs_n1"] = charger_reference_n1(FICHIER_N1)
     except ValueError as e:
         placeholder.empty()
         st.error(f"Erreur lors de la fusion des fichiers joueurs : {e}")
@@ -280,6 +291,7 @@ if not donnees_chargees:
     placeholder.empty()
 
 df = st.session_state["df_joueurs"]
+df_n1 = st.session_state["df_joueurs_n1"]
 
 # ============================================================
 # TRAITEMENT DES DONNÉES
@@ -290,6 +302,16 @@ cols_journees = sorted(cols_journees, key=lambda x: int(x[1:]), reverse=True)
 
 for col in cols_journees:
     df[col] = df[col].apply(nettoyer_note)
+
+cols_journees_n1 = [col for col in df_n1.columns if str(col).startswith('D') and str(col)[1:].isdigit()]
+cols_journees_n1 = sorted(cols_journees_n1, key=lambda x: int(x[1:]), reverse=True)
+
+for col in cols_journees_n1:
+    df_n1[col] = df_n1[col].apply(nettoyer_note)
+
+# Journée calendaire actuelle, déduite des données (jamais codée en dur) :
+# servira au plafond J8 et au bandeau du modèle hybride N-1/actuelle (étape suivante).
+journee_actuelle = determiner_journee_actuelle(df, cols_journees)
 
 # ============================================================
 # SIDEBAR — MES JOUEURS

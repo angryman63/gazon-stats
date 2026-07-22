@@ -6,9 +6,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.fusion_joueurs import fusionner_fichiers_joueurs
 
-FICHIER_6 = "L1joueurs25-26_6joueurs.xlsx"
-FICHIER_8 = "L1joueurs25-26_8joueurs.xlsx"
-FICHIER_10 = "L1joueurs25-26_10joueurs.xlsx"
+FICHIER_6 = "L1joueurs26-27_6joueurs.xlsx"
+FICHIER_8 = "L1joueurs26-27_8joueurs.xlsx"
+FICHIER_10 = "L1joueurs26-27_10joueurs.xlsx"
 FICHIER_SORTIE = "joueurs_fusionne.xlsx"
 
 

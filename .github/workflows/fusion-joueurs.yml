@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "L1joueurs25-26_6joueurs.xlsx"
-      - "L1joueurs25-26_8joueurs.xlsx"
-      - "L1joueurs25-26_10joueurs.xlsx"
+      - "L1joueurs26-27_6joueurs.xlsx"
+      - "L1joueurs26-27_8joueurs.xlsx"
+      - "L1joueurs26-27_10joueurs.xlsx"
   workflow_dispatch:
 
 permissions:
