@@ -65,19 +65,19 @@ def _tension(pct):
         return "🔥 Demandé"
     if pct >= 20:
         return "Peu demandé"
-    return "Indésirable"
+    return "Très peu demandé"
 
 
 def _pill_demande(val):
     val = str(val)
     if 'Très demandé' in val:
         return pill(val, 'info')
+    if 'Très peu demandé' in val:
+        return pill(val, 'bad')
     if 'Demandé' in val:
         return pill(val, 'good')
     if 'Peu demandé' in val:
         return pill(val, 'warn')
-    if 'Indésirable' in val:
-        return pill(val, 'bad')
     return dash(val)
 
 
@@ -219,11 +219,17 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
     # --- Tension du marché (à partir du % achat T1) ---
     df_mercato['Tension'] = df_mercato['AchatT1'].apply(_tension)
 
-    # À éviter — avant filtres
+    # --- Rangs percentile Cote/Note par poste (réutilisés par "À éviter" et par les
+    # seuils de catégorie plus bas) ---
+    df_mercato['Cote_pct'] = df_mercato.groupby('Poste')['Cote'].rank(pct=True)
+    df_mercato['Note_pct'] = df_mercato.groupby('Poste')['Note'].rank(pct=True)
+
+    # À éviter — seuil relatif au poste (pas de seuil de Cote universel) : cher pour
+    # SON poste (au-delà du 60e percentile) ET décevant pour SON poste (sous la
+    # médiane), avant filtres.
     df_eviter = df_mercato[
-        ((df_mercato['Cote'] >= 20) & (df_mercato['Note'] < 5.2)) |
-        ((df_mercato['Cote'] >= 15) & (df_mercato['Note'] < 5.0)) |
-        ((df_mercato['Cote'] >= 15) & (df_mercato['Matchs_joues'] < seuil_matchs))
+        (df_mercato['Cote_pct'] > 0.60) &
+        (df_mercato['Note_pct'] < 0.50)
     ].copy()
 
     # --- ProbaBut / ProbaArret (point 1) : Monte Carlo face aux moyennes de ligne de la ligue ---
@@ -263,9 +269,8 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
     # Stars = chers ET excellents ; Valeurs sûres = prix moyen-élevé ET fiables
     # (%Titu/régularité) ; Pépites = pas chers ET corrects ; Équilibre = catégorie
     # résiduelle (tout le reste), pour garantir que Stars+Valeurs+Équilibre+Pépites
-    # couvrent 100% de chaque poste, sans trou.
-    df_mercato['Note_pct'] = df_mercato.groupby('Poste')['Note'].rank(pct=True)
-    df_mercato['Cote_pct'] = df_mercato.groupby('Poste')['Cote'].rank(pct=True)
+    # couvrent 100% de chaque poste, sans trou. (Note_pct/Cote_pct déjà calculés
+    # plus haut, réutilisés ici tels quels.)
 
     # Fiabilité (Valeurs sûres) : mélange %Titu (dispo) + régularité (constance des
     # notes), percentilée par poste — distincte de "Note" (qui mesure l'excellence,
