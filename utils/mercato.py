@@ -214,6 +214,7 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
     stats_notes = df.apply(lambda row: _moyenne_ecart_type_notes(row, cols_journees), axis=1)
     df_mercato['MoyenneNote'] = stats_notes['MoyenneNote']
     df_mercato['EcartTypeNote'] = stats_notes['EcartTypeNote']
+    df_mercato['Regularite'] = 1 / (1 + df_mercato['EcartTypeNote'])
 
     # --- Tension du marché (à partir du % achat T1) ---
     df_mercato['Tension'] = df_mercato['AchatT1'].apply(_tension)
@@ -257,45 +258,48 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
             lambda row: calculer_score_mercato(row, strategie), axis=1
         )
 
-    # --- Seuils de catégorie par poste, en RANG PERCENTILE (point 8, recalibré) ---
-    # Un seuil en écart-type est disproportionnellement facile à atteindre pour un
-    # poste à distribution de notes resserrée (ex. gardiens, écart-type ~0.6 contre
-    # ~1.2-1.6 ailleurs). Le rang percentile par poste règle ça structurellement :
-    # "top X% de CE poste" ne dépend jamais de sa dispersion.
+    # --- Seuils de catégorie par poste, en RANG PERCENTILE (point 8) — 4 critères
+    # RÉELLEMENT distincts (pas 3 bandes d'un même score, cf. correction ci-dessous) :
+    # Stars = chers ET excellents ; Valeurs sûres = prix moyen-élevé ET fiables
+    # (%Titu/régularité) ; Pépites = pas chers ET corrects ; Équilibre = catégorie
+    # résiduelle (tout le reste), pour garantir que Stars+Valeurs+Équilibre+Pépites
+    # couvrent 100% de chaque poste, sans trou.
     df_mercato['Note_pct'] = df_mercato.groupby('Poste')['Note'].rank(pct=True)
     df_mercato['Cote_pct'] = df_mercato.groupby('Poste')['Cote'].rank(pct=True)
 
-    # Score qualité+prix (Stars/Valeurs sûres/Équilibre) : moyenne des deux rangs,
-    # re-percentilée par poste pour garantir des paliers "top X%" exacts (la moyenne
-    # de deux rangs uniformes n'est plus elle-même uniforme).
-    score_qualite_prix = 0.5 * df_mercato['Cote_pct'] + 0.5 * df_mercato['Note_pct']
-    df_mercato['Score_qualite_prix_pct'] = score_qualite_prix.groupby(df_mercato['Poste']).rank(pct=True)
+    # Fiabilité (Valeurs sûres) : mélange %Titu (dispo) + régularité (constance des
+    # notes), percentilée par poste — distincte de "Note" (qui mesure l'excellence,
+    # pas la fiabilité).
+    df_mercato['Fiabilite'] = 0.6 * (df_mercato['%Titu'] / 100) + 0.4 * df_mercato['Regularite']
+    df_mercato['Fiabilite_pct'] = df_mercato.groupby('Poste')['Fiabilite'].rank(pct=True)
 
-    # Score pépite : prix bas (rang inversé) + note correcte, même re-percentilage.
+    # Score pépite : prix bas (rang inversé) + note correcte, re-percentilé par poste
+    # pour garantir un palier "top X%" exact (la combinaison brute n'est pas uniforme).
     score_pepite = 0.6 * (1 - df_mercato['Cote_pct']) + 0.4 * df_mercato['Note_pct']
     df_mercato['Score_pepite_pct'] = score_pepite.groupby(df_mercato['Poste']).rank(pct=True)
 
-    df_stars = df_mercato[
-        (df_mercato['Score_qualite_prix_pct'] >= 0.88) &
+    mask_stars = (
+        (df_mercato['Cote_pct'] >= 0.85) &
+        (df_mercato['Note_pct'] >= 0.75) &
         (df_mercato['%Titu'] >= 60)
-    ].copy()
-
-    df_valeurs = df_mercato[
-        (df_mercato['Score_qualite_prix_pct'] >= 0.65) & (df_mercato['Score_qualite_prix_pct'] < 0.88) &
+    )
+    mask_valeurs = (
+        (df_mercato['Cote_pct'] >= 0.50) & (df_mercato['Cote_pct'] < 0.85) &
+        (df_mercato['Fiabilite_pct'] >= 0.60) &
         (df_mercato['%Titu'] >= 60)
-    ].copy()
-
-    df_equilibre = df_mercato[
-        (df_mercato['Score_qualite_prix_pct'] >= 0.35) & (df_mercato['Score_qualite_prix_pct'] < 0.65) &
-        (df_mercato['%Titu'] >= 60)
-    ].copy()
-
-    # Pépites : plus rare seuil de prix fixe universel — top rang percentile "cher
-    # bas + note correcte" par poste (remplace aussi le seuil recalibré du point 9).
-    df_pepites = df_mercato[
+    )
+    mask_pepites = (
         (df_mercato['Score_pepite_pct'] >= 0.85) &
         (df_mercato['%Titu'] >= 50)
-    ].copy()
+    )
+    # Équilibre = tout le reste (catégorie résiduelle, aucun critère propre) : garantit
+    # structurellement qu'aucun joueur n'est absent des 4 stratégies combinées.
+    mask_equilibre = ~mask_stars & ~mask_valeurs & ~mask_pepites
+
+    df_stars = df_mercato[mask_stars].copy()
+    df_valeurs = df_mercato[mask_valeurs].copy()
+    df_pepites = df_mercato[mask_pepites].copy()
+    df_equilibre = df_mercato[mask_equilibre].copy()
 
     separateur("STRATÉGIE MERCATO")
     # Sélection stratégie
