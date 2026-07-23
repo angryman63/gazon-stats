@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from modele import (
-    nettoyer_note, calculer_clutch, compter_matchs, absences_consecutives, alerte_blessure,
-    predire_note_hybride, trouver_historique_n1,
+    nettoyer_note, compter_matchs, absences_consecutives, alerte_blessure,
+    predire_note_hybride, trouver_historique_n1, poste_vers_ligne, simuler_proba_but,
 )
 from utils.table_style import inject_style, pill, dash, name_cell, table_html, separateur
 
@@ -27,6 +27,25 @@ TAILLES_LIGUE = {
         "enchere": "Enchere moy",
         "achat_t1": "% achat T1",
     },
+}
+
+# ---------------------------------------------------------------------------
+# Grille de poids ProbaBut/ProbaArret (point 6)
+# ---------------------------------------------------------------------------
+POIDS_PROBA_BASE = 0.18
+MULTIPLICATEUR_POSTE_PROBA = {'A': 1.3, 'MO': 1.1, 'MD': 0.9, 'DL': 0.8, 'DC': 0.7, 'G': 1.4}
+MULTIPLICATEUR_STRATEGIE_PROBA = {'stars': 1.2, 'valeurs_sures': 1.0, 'equilibre': 0.9, 'pepites': 0.8}
+POSTES_SENSIBLES_STRATEGIE = {'A', 'MO', 'G'}
+
+# Répartition du poids restant (1 - poids_ProbaBut) entre Note / Variation_residu /
+# %Titu / AchatT1, par stratégie (point 7). Fractions exactes sur quinzièmes pour
+# que la somme retombe pile sur 1.0 (les pourcentages arrondis type "13.3%" du
+# cahier des charges correspondent à 2/15, pas exactement 0.133).
+PROPORTIONS_RESTANT = {
+    'stars':         {'note': 9 / 15, 'variation_residu': 2 / 15, 'titu': 2 / 15, 'achat_t1': 2 / 15},
+    'valeurs_sures': {'note': 8 / 15, 'variation_residu': 3 / 15, 'titu': 2 / 15, 'achat_t1': 2 / 15},
+    'equilibre':     {'note': 7 / 15, 'variation_residu': 2 / 15, 'titu': 3 / 15, 'achat_t1': 3 / 15},
+    'pepites':       {'note': 7 / 15, 'variation_residu': 2 / 15, 'titu': 2 / 15, 'achat_t1': 4 / 15},
 }
 
 
@@ -97,6 +116,50 @@ def _table_html(df):
     return table_html(df, _formater_cellule)
 
 
+def _moyenne_ecart_type_notes(row, cols_journees):
+    """Moyenne/écart-type des notes jouées cette saison (mêmes conventions que
+    get_stats_joueur_mc). Replie sur la note saison brute (écart-type nul) si
+    le joueur n'a encore aucune note exploitable cette saison."""
+    notes = [row[col] for col in cols_journees if row[col] > 0]
+    if not notes:
+        return pd.Series({'MoyenneNote': float(row.get('Note', 5.0)), 'EcartTypeNote': 0.0})
+    return pd.Series({'MoyenneNote': np.mean(notes), 'EcartTypeNote': np.std(notes)})
+
+
+def calculer_score_mercato(row, strategie):
+    """
+    Score Mercato (point 6/7) : poids_ProbaBut = 0.18 × multiplicateur_poste ×
+    multiplicateur_stratégie (ce dernier ne s'applique qu'aux postes A/MO/G),
+    le reste (1 - poids_ProbaBut) se répartissant entre Note / Variation_residu
+    / %Titu / AchatT1 selon des proportions fixes par stratégie. La somme des
+    poids vaut toujours 1.0, quel que soit le poste ou la stratégie.
+    """
+    poste = row['Poste']
+    mult_poste = MULTIPLICATEUR_POSTE_PROBA.get(poste, 1.0)
+    mult_strategie = (
+        MULTIPLICATEUR_STRATEGIE_PROBA[strategie] if poste in POSTES_SENSIBLES_STRATEGIE else 1.0
+    )
+    poids_proba = POIDS_PROBA_BASE * mult_poste * mult_strategie
+    reste = 1 - poids_proba
+    prop = PROPORTIONS_RESTANT[strategie]
+
+    proba = row['ProbaBut_norm'] * 10
+    note = row['Note']
+    variation_residu = row['Variation_residu_norm'] * 10
+    titu = row['%Titu'] / 100 * 10
+    achat_t1 = row['AchatT1_norm'] * 10
+    if strategie in ('equilibre', 'pepites'):
+        achat_t1 = 10 - achat_t1
+
+    return (
+        poids_proba * proba +
+        reste * prop['note'] * note +
+        reste * prop['variation_residu'] * variation_residu +
+        reste * prop['titu'] * titu +
+        reste * prop['achat_t1'] * achat_t1
+    )
+
+
 def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuelle):
     inject_style()
     separateur("TAILLE DE LA LIGUE")
@@ -146,10 +209,11 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
         lambda row: absences_consecutives(row, cols_journees), axis=1)
     df_mercato['Alerte'] = df.apply(
         lambda row: alerte_blessure(row, cols_journees), axis=1)
-    df_mercato['Clutch'] = df.apply(
-        lambda row: calculer_clutch(row, cols_journees, seuil=7), axis=1)
-    df_mercato['Popularite'] = df_mercato['Cote'] * df_mercato['Note'] / 100
-    df_mercato['Ratio'] = df_mercato['Note'] / df_mercato['Cote']
+    df_mercato['Ratio'] = df_mercato['Note'] / df_mercato['Cote']  # gardée pour affichage éventuel, plus utilisée dans les scores
+
+    stats_notes = df.apply(lambda row: _moyenne_ecart_type_notes(row, cols_journees), axis=1)
+    df_mercato['MoyenneNote'] = stats_notes['MoyenneNote']
+    df_mercato['EcartTypeNote'] = stats_notes['EcartTypeNote']
 
     # --- Tension du marché (à partir du % achat T1) ---
     df_mercato['Tension'] = df_mercato['AchatT1'].apply(_tension)
@@ -161,64 +225,81 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
         ((df_mercato['Cote'] >= 15) & (df_mercato['Matchs_joues'] < seuil_matchs))
     ].copy()
 
-    # Normalisation
-    for col in ['Variation', 'Clutch', 'Popularite', 'Ratio']:
-        col_min = df_mercato[col].min()
-        col_max_norm = df_mercato[col].max()
-        df_mercato[f'{col}_norm'] = (
-            (df_mercato[col] - col_min) / (col_max_norm - col_min)
-            if col_max_norm > col_min else 0
-        )
+    # --- ProbaBut / ProbaArret (point 1) : Monte Carlo face aux moyennes de ligne de la ligue ---
+    df_mercato['Ligne'] = df_mercato['Poste'].apply(poste_vers_ligne)
+    moyennes_lignes = df_mercato.groupby('Ligne')['MoyenneNote'].mean().to_dict()
+    for ligne in ['ATT', 'MIL', 'DEF', 'GB']:
+        moyennes_lignes.setdefault(ligne, 5.0)
 
-    clutch_poids = {
-        'G': 0.35, 'A': 0.30, 'MO': 0.20,
-        'DL': 0.15, 'MD': 0.10, 'DC': 0.10
-    }
+    df_mercato['ProbaBut'] = df_mercato.apply(
+        lambda row: simuler_proba_but(
+            row['MoyenneNote'], row['EcartTypeNote'], row['Poste'], moyennes_lignes
+        ),
+        axis=1
+    )
 
-    def calculer_score_mercato(row, strategie):
-        cp = clutch_poids.get(row['Poste'], 0.15)
-        clutch = row['Clutch_norm'] * 10
-        note = row['Note']
-        variation = row['Variation_norm'] * 10
-        ratio = row['Ratio_norm'] * 10
-        titu = row['%Titu'] / 100 * 10
-        pop = row['Popularite_norm'] * 10
-        if strategie == 'stars':
-            return note*0.40 + clutch*cp + variation*0.15 + titu*0.10 + pop*0.05
-        elif strategie == 'valeurs_sures':
-            return note*0.35 + clutch*(cp*0.8) + variation*0.20 + ratio*0.15 + titu*0.10
-        elif strategie == 'equilibre':
-            return note*0.30 + ratio*0.25 + clutch*(cp*0.7) + variation*0.15 + titu*0.10
-        elif strategie == 'pepites':
-            return ratio*0.40 + note*0.25 + clutch*(cp*0.5) + variation*0.15 + titu*0.10
+    # --- Variation_residu (point 4) : résidu de Variation ~ Note + Cote ---
+    X = np.column_stack([
+        np.ones(len(df_mercato)),
+        df_mercato['Note'].to_numpy(dtype=float),
+        df_mercato['Cote'].to_numpy(dtype=float),
+    ])
+    y = df_mercato['Variation'].to_numpy(dtype=float)
+    coeffs, *_ = np.linalg.lstsq(X, y, rcond=None)
+    df_mercato['Variation_residu'] = y - X @ coeffs
+
+    # --- Normalisation en rang percentile, séparément par poste (point 5) ---
+    for col in ['ProbaBut', 'Variation_residu', 'AchatT1']:
+        df_mercato[f'{col}_norm'] = df_mercato.groupby('Poste')[col].rank(pct=True)
 
     for strategie in ['stars', 'valeurs_sures', 'equilibre', 'pepites']:
         df_mercato[f'Score_{strategie}'] = df_mercato.apply(
             lambda row: calculer_score_mercato(row, strategie), axis=1
         )
 
+    # --- Seuils de catégorie par poste, relatifs à la distribution du poste (point 8) ---
+    stats_poste = {}
+    for poste in df_mercato['Poste'].unique():
+        sous = df_mercato[df_mercato['Poste'] == poste]
+        stats_poste[poste] = {
+            'note_moy': sous['Note'].mean(), 'note_std': sous['Note'].std() or 1e-9,
+            'cote_moy': sous['Cote'].mean(), 'cote_std': sous['Cote'].std() or 1e-9,
+        }
+
+    def _z(row, champ):
+        s = stats_poste[row['Poste']]
+        moy, std = (s['note_moy'], s['note_std']) if champ == 'Note' else (s['cote_moy'], s['cote_std'])
+        return (row[champ] - moy) / std
+
+    df_mercato['Z_note'] = df_mercato.apply(lambda r: _z(r, 'Note'), axis=1)
+    df_mercato['Z_cote'] = df_mercato.apply(lambda r: _z(r, 'Cote'), axis=1)
+
     df_stars = df_mercato[
-        (df_mercato['Cote'] >= 25) &
-        (df_mercato['Note'] >= 5.5) &
+        (df_mercato['Z_cote'] >= 1.0) &
+        (df_mercato['Z_note'] >= 0.5) &
         (df_mercato['%Titu'] >= 60)
     ].copy()
 
     df_valeurs = df_mercato[
-        (df_mercato['Cote'] >= 12) &
-        (df_mercato['Cote'] < 25) &
-        (df_mercato['Note'] >= 5.2) &
+        (df_mercato['Z_cote'] >= 0.25) & (df_mercato['Z_cote'] < 1.0) &
+        (df_mercato['Z_note'] >= 0.25) &
         (df_mercato['%Titu'] >= 60)
     ].copy()
 
     df_equilibre = df_mercato[
-        (df_mercato['Cote'] >= 8) &
-        (df_mercato['Note'] >= 5.0) &
+        (df_mercato['Z_cote'] < 0.25) &
+        (df_mercato['Z_note'] >= 0.0) &
         (df_mercato['%Titu'] >= 60)
     ].copy()
 
+    # Pépites (point 9) : seuil de prix fixe, recalibré par poste (pas de z-score en direct)
+    plafond_pepite = {
+        p: max(1.0, s['cote_moy'] - 0.3 * s['cote_std']) for p, s in stats_poste.items()
+    }
+    df_mercato['PlafondPepite'] = df_mercato['Poste'].map(plafond_pepite)
     df_pepites = df_mercato[
-        (df_mercato['Cote'] < 12) &
-        (df_mercato['Note'] >= 5.0) &
+        (df_mercato['Cote'] < df_mercato['PlafondPepite']) &
+        (df_mercato['Z_note'] >= 0.0) &
         (df_mercato['%Titu'] >= 50)
     ].copy()
 
@@ -281,26 +362,22 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
         tabs = st.tabs(list(postes.values()), key="mercato_postes")
         for tab, (code, nom) in zip(tabs, postes.items()):
             with tab:
-                if strategie_key == 'stars' and code == 'DC':
-                    df_poste = df_mercato[
-                        (df_mercato['Poste'] == 'DC') &
-                        (df_mercato['Cote'] >= 20) &
-                        (df_mercato['Note'] >= 5.3) &
-                        (df_mercato['%Titu'] >= 60)
-                    ]
-                else:
-                    df_poste = df_s[df_s['Poste'] == code]
+                df_poste = df_s[df_s['Poste'] == code]
 
                 top = df_poste.sort_values(
                     f'Score_{strategie_key}', ascending=False
                 ).head(10).copy()
-                top['Clutch'] = top['Clutch'].apply(lambda x: f"{x*100:.0f}%")
+                nom_colonne_proba = 'Proba arrêt' if code == 'G' else 'Proba but'
+                top['ProbaBut'] = top['ProbaBut'].apply(lambda x: f"{x*100:.0f}%")
 
                 if len(top) > 0:
                     st.markdown(
                         _table_html(
-                            top[cols_affichage + ['Clutch']
-                                ].rename(columns={'Enchere': 'Enchère moy.', 'Tension': 'Demande', 'Matchs_joues': 'Matchs joués'}).reset_index(drop=True)
+                            top[cols_affichage + ['ProbaBut']
+                                ].rename(columns={
+                                    'Enchere': 'Enchère moy.', 'Tension': 'Demande',
+                                    'Matchs_joues': 'Matchs joués', 'ProbaBut': nom_colonne_proba,
+                                }).reset_index(drop=True)
                         ),
                         unsafe_allow_html=True
                     )

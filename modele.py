@@ -242,6 +242,48 @@ def simuler_buts_mpg(equipe_att, equipe_def, domicile=True):
     return buts_mpg
 
 
+def simuler_proba_but(moyenne, ecart_type, poste, moyennes_lignes, n_simulations=1000):
+    """
+    Simule par Monte Carlo la probabilité qu'un joueur marque un but MPG
+    (ProbaBut, joueurs de champ) ou réalise un arrêt MPG (ProbaArret,
+    gardiens : note simulée >= 8), à partir de sa moyenne/écart-type de
+    notes. Reprend les mêmes règles de franchissement de lignes que
+    simuler_buts_mpg()/monte_carlo_match() (seuil de départ note >= 5,
+    puis lignes à franchir avec malus cumulatif), mais face aux moyennes
+    de ligne DE LA LIGUE (moyennes_lignes), pour une métrique de qualité
+    intrinsèque du joueur, indépendante d'un adversaire précis.
+    """
+    ligne = poste_vers_ligne(poste)
+
+    if ecart_type <= 0:
+        notes = np.full(n_simulations, moyenne)
+    else:
+        notes = np.random.normal(moyenne, ecart_type, n_simulations)
+    notes = np.clip(notes, 0, 10)
+
+    if ligne == 'GB':
+        return float(np.mean(notes >= 8))
+
+    if ligne == 'ATT':
+        lignes = [(moyennes_lignes['DEF'], -1.0), (moyennes_lignes['GB'], -0.5)]
+    elif ligne == 'MIL':
+        lignes = [(moyennes_lignes['MIL'], -1.0), (moyennes_lignes['DEF'], -0.5),
+                  (moyennes_lignes['GB'], -0.5)]
+    elif ligne == 'DEF':
+        lignes = [(moyennes_lignes['ATT'], -1.0), (moyennes_lignes['MIL'], -0.5),
+                  (moyennes_lignes['DEF'], -0.5), (moyennes_lignes['GB'], -0.5)]
+    else:
+        return 0.0
+
+    reussite = notes >= 5
+    note_courante = notes.copy()
+    for moy_adverse, malus in lignes:
+        reussite &= (note_courante >= moy_adverse)
+        note_courante = note_courante + malus
+
+    return float(np.mean(reussite))
+
+
 def monte_carlo_match(joueurs_moi, joueurs_adv, n_simulations=500,
                       bonus_moi=None, bonus_adv=None,
                       domicile=True, joueur_uber=None):
