@@ -257,49 +257,43 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
             lambda row: calculer_score_mercato(row, strategie), axis=1
         )
 
-    # --- Seuils de catégorie par poste, relatifs à la distribution du poste (point 8) ---
-    stats_poste = {}
-    for poste in df_mercato['Poste'].unique():
-        sous = df_mercato[df_mercato['Poste'] == poste]
-        stats_poste[poste] = {
-            'note_moy': sous['Note'].mean(), 'note_std': sous['Note'].std() or 1e-9,
-            'cote_moy': sous['Cote'].mean(), 'cote_std': sous['Cote'].std() or 1e-9,
-        }
+    # --- Seuils de catégorie par poste, en RANG PERCENTILE (point 8, recalibré) ---
+    # Un seuil en écart-type est disproportionnellement facile à atteindre pour un
+    # poste à distribution de notes resserrée (ex. gardiens, écart-type ~0.6 contre
+    # ~1.2-1.6 ailleurs). Le rang percentile par poste règle ça structurellement :
+    # "top X% de CE poste" ne dépend jamais de sa dispersion.
+    df_mercato['Note_pct'] = df_mercato.groupby('Poste')['Note'].rank(pct=True)
+    df_mercato['Cote_pct'] = df_mercato.groupby('Poste')['Cote'].rank(pct=True)
 
-    def _z(row, champ):
-        s = stats_poste[row['Poste']]
-        moy, std = (s['note_moy'], s['note_std']) if champ == 'Note' else (s['cote_moy'], s['cote_std'])
-        return (row[champ] - moy) / std
+    # Score qualité+prix (Stars/Valeurs sûres/Équilibre) : moyenne des deux rangs,
+    # re-percentilée par poste pour garantir des paliers "top X%" exacts (la moyenne
+    # de deux rangs uniformes n'est plus elle-même uniforme).
+    score_qualite_prix = 0.5 * df_mercato['Cote_pct'] + 0.5 * df_mercato['Note_pct']
+    df_mercato['Score_qualite_prix_pct'] = score_qualite_prix.groupby(df_mercato['Poste']).rank(pct=True)
 
-    df_mercato['Z_note'] = df_mercato.apply(lambda r: _z(r, 'Note'), axis=1)
-    df_mercato['Z_cote'] = df_mercato.apply(lambda r: _z(r, 'Cote'), axis=1)
+    # Score pépite : prix bas (rang inversé) + note correcte, même re-percentilage.
+    score_pepite = 0.6 * (1 - df_mercato['Cote_pct']) + 0.4 * df_mercato['Note_pct']
+    df_mercato['Score_pepite_pct'] = score_pepite.groupby(df_mercato['Poste']).rank(pct=True)
 
     df_stars = df_mercato[
-        (df_mercato['Z_cote'] >= 1.0) &
-        (df_mercato['Z_note'] >= 0.5) &
+        (df_mercato['Score_qualite_prix_pct'] >= 0.88) &
         (df_mercato['%Titu'] >= 60)
     ].copy()
 
     df_valeurs = df_mercato[
-        (df_mercato['Z_cote'] >= 0.25) & (df_mercato['Z_cote'] < 1.0) &
-        (df_mercato['Z_note'] >= 0.25) &
+        (df_mercato['Score_qualite_prix_pct'] >= 0.65) & (df_mercato['Score_qualite_prix_pct'] < 0.88) &
         (df_mercato['%Titu'] >= 60)
     ].copy()
 
     df_equilibre = df_mercato[
-        (df_mercato['Z_cote'] < 0.25) &
-        (df_mercato['Z_note'] >= 0.0) &
+        (df_mercato['Score_qualite_prix_pct'] >= 0.35) & (df_mercato['Score_qualite_prix_pct'] < 0.65) &
         (df_mercato['%Titu'] >= 60)
     ].copy()
 
-    # Pépites (point 9) : seuil de prix fixe, recalibré par poste (pas de z-score en direct)
-    plafond_pepite = {
-        p: max(1.0, s['cote_moy'] - 0.3 * s['cote_std']) for p, s in stats_poste.items()
-    }
-    df_mercato['PlafondPepite'] = df_mercato['Poste'].map(plafond_pepite)
+    # Pépites : plus rare seuil de prix fixe universel — top rang percentile "cher
+    # bas + note correcte" par poste (remplace aussi le seuil recalibré du point 9).
     df_pepites = df_mercato[
-        (df_mercato['Cote'] < df_mercato['PlafondPepite']) &
-        (df_mercato['Z_note'] >= 0.0) &
+        (df_mercato['Score_pepite_pct'] >= 0.85) &
         (df_mercato['%Titu'] >= 50)
     ].copy()
 
