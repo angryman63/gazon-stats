@@ -171,15 +171,30 @@ def trouver_historique_n1(nom_joueur, poste, df_n1):
         return correspondances.iloc[0]
     return None
 
-def etiquette_regularite(valeur, q10, q50, q80):
-    if valeur >= q80:
-        return "Métronome"
+def etiquette_regularite(valeur, q25, q50, q75, note_saison=None, note_mediane_poste=None):
+    """Classe la régularité brute (1/(1+écart-type), aveugle au niveau) en quartiles
+    par poste. Un joueur ne peut accéder à "Métronome" ou "Régulier" que si sa
+    Note_saison est aussi au-dessus de la médiane de son poste — sans ce plancher
+    de qualité, un joueur constamment médiocre mais très peu variable (ex. toujours
+    ~4/10) serait autrement classé "Métronome" à tort. En dessous du plancher, il
+    est reclassé en "Irrégulier" (le calcul de la variance elle-même est inchangé)."""
+    if valeur >= q75:
+        label = "Métronome"
     elif valeur >= q50:
-        return "Régulier"
-    elif valeur >= q10:
-        return "Irrégulier"
+        label = "Régulier"
+    elif valeur >= q25:
+        label = "Irrégulier"
     else:
-        return "Rotaldo"
+        label = "Rotaldo"
+
+    if (
+        label in ("Métronome", "Régulier")
+        and note_saison is not None
+        and note_mediane_poste is not None
+        and note_saison < note_mediane_poste
+    ):
+        return "Irrégulier"
+    return label
 
 def get_joueur_info(nom_joueur, df, cols_journees):
     row = df[df['Joueur'].str.lower() == nom_joueur.strip().lower()]
