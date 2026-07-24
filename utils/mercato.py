@@ -291,16 +291,21 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
         (df_mercato['%Titu'] >= 60) &
         ~mask_eviter
     )
-    mask_valeurs = (
-        (df_mercato['Cote_pct'] >= 0.50) & (df_mercato['Cote_pct'] < 0.85) &
-        (df_mercato['Fiabilite_pct'] >= 0.60) &
-        (df_mercato['%Titu'] >= 60) &
-        ~mask_eviter
-    )
+    # Pépites calculé avant Valeurs sûres : en cas de chevauchement (joueur cher-moyen
+    # ET fiable ET par ailleurs "pas cher + correct" pour son poste), Pépites prime —
+    # son critère de prix est le plus objectif et le plus attendu par un utilisateur
+    # qui cherche justement un bon coup pas cher.
     mask_pepites = (
         (df_mercato['Score_pepite_pct'] >= 0.85) &
         (df_mercato['%Titu'] >= 50) &
         ~mask_eviter
+    )
+    mask_valeurs = (
+        (df_mercato['Cote_pct'] >= 0.50) & (df_mercato['Cote_pct'] < 0.85) &
+        (df_mercato['Fiabilite_pct'] >= 0.60) &
+        (df_mercato['%Titu'] >= 60) &
+        ~mask_eviter &
+        ~mask_pepites
     )
     # Équilibre = tout le reste (catégorie résiduelle, aucun critère propre) : garantit
     # structurellement qu'aucun joueur n'est absent des 4 stratégies combinées. "À
