@@ -161,8 +161,13 @@ def afficher_hebdo(df, cols_journees, df_n1, cols_journees_n1, journee_actuelle,
         mask = df_scores['Poste'] == poste
         vals = df_scores.loc[mask, '_regularite_brute']
         q25, q50, q75 = vals.quantile([0.25, 0.5, 0.75])
-        df_scores.loc[mask, 'Régularité'] = df_scores.loc[mask, '_regularite_brute'].apply(
-            lambda x: etiquette_regularite(x, q25, q50, q75)
+        note_mediane_poste = df_scores.loc[mask, 'Note saison'].median()
+        df_scores.loc[mask, 'Régularité'] = df_scores.loc[mask].apply(
+            lambda row: etiquette_regularite(
+                row['_regularite_brute'], q25, q50, q75,
+                row['Note saison'], note_mediane_poste
+            ),
+            axis=1
         )
 
     df_mes_joueurs = df_scores.copy()
