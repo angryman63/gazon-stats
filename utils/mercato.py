@@ -226,11 +226,13 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
 
     # À éviter — seuil relatif au poste (pas de seuil de Cote universel) : cher pour
     # SON poste (au-delà du 60e percentile) ET décevant pour SON poste (sous la
-    # médiane), avant filtres.
-    df_eviter = df_mercato[
+    # médiane), avant filtres. Calculé en mask pour pouvoir exclure ces joueurs des
+    # 4 autres stratégies plus bas (mutuellement exclusif, cf. mask_stars etc.).
+    mask_eviter = (
         (df_mercato['Cote_pct'] > 0.60) &
         (df_mercato['Note_pct'] < 0.50)
-    ].copy()
+    )
+    df_eviter = df_mercato[mask_eviter].copy()
 
     # --- ProbaBut / ProbaArret (point 1) : Monte Carlo face aux moyennes de ligne de la ligue ---
     df_mercato['Ligne'] = df_mercato['Poste'].apply(poste_vers_ligne)
@@ -286,20 +288,25 @@ def afficher_mercato(df, cols_journees, df_n1, cols_journees_n1, journee_actuell
     mask_stars = (
         (df_mercato['Cote_pct'] >= 0.85) &
         (df_mercato['Note_pct'] >= 0.75) &
-        (df_mercato['%Titu'] >= 60)
+        (df_mercato['%Titu'] >= 60) &
+        ~mask_eviter
     )
     mask_valeurs = (
         (df_mercato['Cote_pct'] >= 0.50) & (df_mercato['Cote_pct'] < 0.85) &
         (df_mercato['Fiabilite_pct'] >= 0.60) &
-        (df_mercato['%Titu'] >= 60)
+        (df_mercato['%Titu'] >= 60) &
+        ~mask_eviter
     )
     mask_pepites = (
         (df_mercato['Score_pepite_pct'] >= 0.85) &
-        (df_mercato['%Titu'] >= 50)
+        (df_mercato['%Titu'] >= 50) &
+        ~mask_eviter
     )
     # Équilibre = tout le reste (catégorie résiduelle, aucun critère propre) : garantit
-    # structurellement qu'aucun joueur n'est absent des 4 stratégies combinées.
-    mask_equilibre = ~mask_stars & ~mask_valeurs & ~mask_pepites
+    # structurellement qu'aucun joueur n'est absent des 4 stratégies combinées. "À
+    # éviter" en est explicitement exclu aussi (catégories mutuellement exclusives :
+    # un joueur "à éviter" n'apparaît nulle part ailleurs).
+    mask_equilibre = ~mask_stars & ~mask_valeurs & ~mask_pepites & ~mask_eviter
 
     df_stars = df_mercato[mask_stars].copy()
     df_valeurs = df_mercato[mask_valeurs].copy()
